@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 994ad96393104fd4daa93bbba57bb9b1, type: 3}
+  m_Name: "\u73AF\u4FDD-\u6B8B\u8EAF\u5316\u6797"
+  m_EditorClassIdentifier: 
+  Name: "\u73AF\u4FDD-\u6B8B\u8EAF\u5316\u6797"
+  FruitId: 10000
+  isTigger: 0
+  isRootFruit: 0
+  isCampFruit: 0
+  CostPointsInfo: 1
+  FruitCamp: 1
+  FruitIconTiggered: {fileID: 21300000, guid: 55392252485ea384e97a0f95fd8ef9f5, type: 3}
+  FruitIconNotTiggered: {fileID: 21300000, guid: 30b21abc2bbf3f140a510f22556792fa,
+    type: 3}
