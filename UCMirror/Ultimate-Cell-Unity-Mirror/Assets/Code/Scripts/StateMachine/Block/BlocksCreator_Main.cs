@@ -8,37 +8,28 @@ using UnityEngine.Events;
 using System.Linq;
 using Mirror;
 using UC_PlayerData;
-public struct Server_BockChanged
-{
-    public Vector2 PosId;
-    public int State;
-}
+
 public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
 {
 
 #region 数据对象
-    // 通讯对象
-    // private GameObject sceneLoader;
-    // private CommunicationInteractionManager CommunicationManager;
-    // private BroadcastClass broadcastClass;
     public UnityAction OnBlocksInitEnd;
-    /// <summary>
-    /// 心流模式遮罩
-    /// </summary>
-    public SpriteRenderer FlowMask;
-    /// <summary>
-    /// 单个砖块表现类
-    /// </summary>
+    public SpriteRenderer flowMask;
+    public SpriteRenderer FlowMask
+    {
+        get
+        {
+            if(!flowMask)flowMask = transform.Find("FlowMask").GetComponent<SpriteRenderer>();
+            return flowMask;
+        }
+        set
+        {
+            flowMask = value;
+        }
+    }
     public BlockDisplay block;
-    /// <summary>
-    /// 宽
-    /// </summary>
     public int x = 10;
-    /// <summary>
-    /// 长
-    /// </summary>
     public int z = 20;
-    Vector2 pos = new Vector2(0,3);
     public List<BlockDisplay> blocks = new();
     Vector3 originPos = Vector3.zero;
     private Tweener inflowTweener;
@@ -88,14 +79,21 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
             return blocksReferee;
         }
     }
+#endregion 数据对象
+#region 联网数据对象
+    public struct Server_BockChanged
+    {
+        public Vector2 PosId;
+        public int State;
+    }
     [Header("联网")]
     [SyncVar(hook = nameof(OnBlockNeedChange))]
     public Server_BockChanged sync_blockChanged;
     Server_BockChanged server_blockChanged;
     private Stack<Server_BockChanged> dataStack;
-#endregion 数据对象
+#endregion 联网数据对象
 #region 数据关系
-    private void Start()
+    public void Start()
     {   
         FlowMask.color = new Color(0.0f,0.0f,0.0f,0.0f);
         dataStack = new Stack<Server_BockChanged>();
@@ -104,20 +102,19 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
         Invoke(nameof(LateStart),0.1f);
         OnBlocksInitEnd += () =>
         {
+            
             // 初始化可放置区域
             InitPutzone();
-            ReflashPlayerBlocksOccupied();
-            // 开始计时
-            BlocksReferee.Active();
-            // 监听砖块变化事件
-            if(RunModeData.CurrentRunMode == RunMode.Local)
+            if(Local())
             {
+                Event_ReflashPlayerBlocksOccupied();
+                BlocksReferee.Active();
                 blocks.ForEach((block) => {
-                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += ReflashPlayerBlocksOccupied;
+                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += Event_ReflashPlayerBlocksOccupied;
                     // block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += BlocksReferee.CheckLose;
                 });
                 blocks.ForEach((block) => {
-                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += BlocksCounterInvoke;
+                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += Event_BlocksCounterInvoke;
                 });
                 // 道具生成
                 BlocksProps.Generate(PropsData.PropsState.ChainBall);
@@ -126,21 +123,40 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
             }else
             {
                 if(!isServer)return;
+                Event_ReflashPlayerBlocksOccupied();
                 blocks.ForEach((block) => {
-                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += Server_OnBlockTetriStateChanged;
+                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += Server_Event_OnBlockTetriStateChanged;
                 });
+                blocks.ForEach((block) => {
+                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += Event_ReflashPlayerBlocksOccupied;
+                });
+                blocks.ForEach((block) => {
+                    block.GetComponent<BlockTetriHandler>().OnBlockTetriStateChanged += Event_BlocksCounterInvoke;
+                });
+                // 道具生成
+                BlocksProps.Generate(PropsData.PropsState.ChainBall);
+                BlocksProps.Generate(PropsData.PropsState.MoveDirectionChanger);
+                BlocksProps.Generate(PropsData.PropsState.Obstacle);
+
                 InvokeRepeating(nameof(ProcessDataFromStack),0.1f,0.1f);
             }
         };
+        UIData.OnPlayer1MoraleAccumulationMaxed += BlocksProps.Event_GenerateChainBall_MoraleAccumulationMaxed;
+        UIData.OnPlayer2MoraleAccumulationMaxed += BlocksProps.Event_GenerateChainBall_MoraleAccumulationMaxed;
+    }
+    void OnDisable()
+    {
+        UIData.OnPlayer1MoraleAccumulationMaxed -= BlocksProps.Event_GenerateChainBall_MoraleAccumulationMaxed;
+        UIData.OnPlayer2MoraleAccumulationMaxed -= BlocksProps.Event_GenerateChainBall_MoraleAccumulationMaxed;
     }
 #endregion 数据关系
 #region 数据操作
-    public void BlocksCounterInvoke(Vector2 posId = default(Vector2), int state = 0)
+    public void Event_BlocksCounterInvoke(Vector2 posId = default(Vector2), int state = 0)
     {
         BlocksCounter.CheckFullRows();
         BlocksCounter.OnStateChange();
     }
-    public void ReflashPlayerBlocksOccupied(Vector2 posId = default(Vector2), int state = 0)
+    public void Event_ReflashPlayerBlocksOccupied(Vector2 posId = default(Vector2), int state = 0)
     {
         BlocksData.peace_numb = blocks.Where((block) => block.GetComponent<BlockTetriHandler>().State == BlockTetriHandler.BlockTetriState.Peace).Count();
         BlocksData.Player1_numb = blocks.Where((block) => block.GetComponent<BlockTetriHandler>().State == BlockTetriHandler.BlockTetriState.Occupied_Player1).Count();
@@ -150,25 +166,25 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
     }
     void LateStart()
     {
+        // Debug.Log(FindObjectsOfType<IdelBox>().Length);
+        if(FindObjectsOfType<IdelBox>().Length == 0)Invoke(nameof(LateStart),0.1f);
         FindObjectsOfType<IdelBox>().ToList().ForEach((box) => {
-            box.OnTetriBeginDrag += OnListenBlocksMoveStart;
-            box.OnTetriEndDrag += OnListenBlocksMoveEnd;
+            box.OnTetriBeginDrag += Event_OnListenBlocksMoveStart;
+            box.OnTetriEndDrag += Event_OnListenBlocksMoveEnd;
         });
         FindObjectsOfType<BuoyInfo>().ToList().ForEach((buoy) => {
-            buoy.OnBuoyDrag += OnListenBlocksMoveStart;
-            buoy.OnBuoyEndDrag += OnListenBlocksMoveEnd;
+            buoy.OnBuoyDrag += Event_OnListenBlocksMoveStart;
+            buoy.OnBuoyEndDrag += Event_OnListenBlocksMoveEnd;
         });
     }
-    void OnListenBlocksMoveStart()
+    public void Event_OnListenBlocksMoveStart()
     {
-        
-        if(outflowTweener!=null){outflowTweener.Kill();}
-        FlowMask.color = new Color(0.0f,0.0f,0.0f,0.3f);
-
-        foreach(BlockDisplay block in blocks)
-        {
-            block.InFlow();
-        }
+        if(outflowTweener!=null){outflowTweener.Kill(); outflowTweener = null;}
+        flowMask.color = new Color(0.0f,0.0f,0.0f,0.55f);
+        // foreach(BlockDisplay block in blocks)
+        // {
+        //     block.InFlow();
+        // }
         FindObjectsOfType<TetriBlockSimple>().ToList().ForEach((tetri) => {    
                 tetri.InFlow();
                 tetri.GetComponent<TetriBlockSimple>().InFlow();
@@ -176,17 +192,15 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
         transform.position = originPos;
         inflowTweener = transform.DOMoveY(originPos.y+0.1f,0.5f).SetEase(Ease.OutCirc);
     }
-    void OnListenBlocksMoveEnd()
+    public void Event_OnListenBlocksMoveEnd()
     {
-        
-        if(inflowTweener!=null){inflowTweener.Kill();}
-
+        if(inflowTweener!=null){inflowTweener.Kill(); inflowTweener = null;}
+        if(!FlowMask)return;
         FlowMask.color = new Color(0.0f,0.0f,0.0f,0.0f);
-
-        foreach(BlockDisplay block in blocks)
-        {
-            block.OutFlow();
-        }
+        // foreach(BlockDisplay block in blocks)
+        // {
+        //     block.OutFlow();
+        // }
         FindObjectsOfType<TetriBlockSimple>().ToList().ForEach((tetri) => {    
                 tetri.OutFlow();
                 tetri.GetComponent<TetriBlockSimple>().OutFlow();
@@ -194,23 +208,6 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
        
         outflowTweener = transform.DOMoveY(originPos.y,0.5f).SetEase(Ease.OutBounce);
     }
-
-    void BrightBlock()
-    {
-        // 假数据
-        Vector2 lastPos = pos;
-        pos.x += 1;
-        
-        if(blocks.Count == 0)
-        {
-            CreateBlocks();
-        }else
-        {
-            blocks.Find((block) => block.posId == pos).GetComponent<BlockDisplay>().Bright(EventType.UnitColor.green);
-            blocks.Find((block) => block.posId == lastPos).GetComponent<BlockDisplay>().NotBright();
-        }
-    }
-
     void CreateBlocks()
     {
         blocks.Clear();
@@ -224,7 +221,7 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
                 // InstantiateBlock(-i/2,j/2+1);
                 // InstantiateBlock(i/2+1,-j/2);
                 // InstantiateBlock(-i/2,-j/2);
-               // 以左下角为原点生成（方便和逻辑层通讯）
+               // 以左下角为原点生成（方便计算）
                InstantiateBlock(i,j);
 
             }
@@ -285,14 +282,35 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
             }
         }
     }
-    // ------------------联网------------------
+    
+#endregion 数据操作
+#region 联网数据操作
+    public bool Local()
+    {
+        if(RunModeData.CurrentRunMode == RunMode.Local)return true;
+        return false;
+    }
+    public void BlocksUIActive()
+    {
+        
+        if(!isServer)return;
+        string music_BattlefieldBackground = "Music_BattlefieldBackground";
+        AudioSystemManager.Instance.PlayMusic(music_BattlefieldBackground, 99);
+        BlocksReferee.Active();
+        Client_PlayMusic(music_BattlefieldBackground, 99);
+    }
+    [ClientRpc]
+    void Client_PlayMusic(string musicName, int loopTime)
+    {
+        AudioSystemManager.Instance.PlayMusic(musicName, loopTime);
+    }
     [Client]
     void OnBlockNeedChange(Server_BockChanged previousData, Server_BockChanged newData)
     {
         blocks.Find((block) => block.posId == newData.PosId).GetComponent<BlockTetriHandler>().state = (BlockTetriHandler.BlockTetriState)newData.State;
     }
     [Server]
-    void Server_OnBlockTetriStateChanged(Vector2 posId, int state)
+    void Server_Event_OnBlockTetriStateChanged(Vector2 posId, int state)
     {
         server_blockChanged = new Server_BockChanged()
         {
@@ -308,5 +326,5 @@ public class BlocksCreator_Main : SingletonNetwork<BlocksCreator_Main>
         if(dataStack.Count == 0) return;
         sync_blockChanged = dataStack.Pop();
     }
-#endregion 数据操作
+#endregion 联网数据操作
 }

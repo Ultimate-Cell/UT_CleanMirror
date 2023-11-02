@@ -27,9 +27,9 @@ public class LoginMainSceneManager : MonoBehaviour
 
     private void Start()
     {
-        LoginButton.onClick.AddListener( () => { this.LoginButtonClick(); });
+        LoginButton.onClick.AddListener(() => { this.LoginButtonClick(); });
 
-        CreateAccountButton.onClick.AddListener( () => { this.CreateButtonClick(); });
+        CreateAccountButton.onClick.AddListener(() => { this.CreateButtonClick(); });
 
         Invoke(nameof(SetMask), 0.1f);
 
@@ -59,7 +59,7 @@ public class LoginMainSceneManager : MonoBehaviour
     /// <summary>
     /// 登陆按钮点击事件
     /// </summary>
-    void LoginButtonClick() 
+    void LoginButtonClick()
     {
         SceneLoad.LoadMainBasicScene();
     }

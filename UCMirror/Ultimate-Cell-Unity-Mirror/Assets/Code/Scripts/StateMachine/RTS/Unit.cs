@@ -6,8 +6,9 @@ using UnityEngine.AI;
 using UnityEngine.Events;
 using Spine.Unity;
 using DG.Tweening;
-
-public class Unit : MonoBehaviour
+using Mirror;
+using UC_PlayerData;
+public class Unit : NetworkBehaviour
 {
 
     #region 数据对象
@@ -16,7 +17,7 @@ public class Unit : MonoBehaviour
     public WeaponTemplate.WeaponType weaponType = WeaponTemplate.WeaponType.Null;
     protected StateMachineManager stateMachineManager;
     public UnitTemplate unitTemplate;
-    public UnitState state = UnitState.Idle;
+    protected UnitState state = UnitState.Idle;
     public bool flip = false;
     public UnitSoul unitSoul;
     [HideInInspector]
@@ -56,9 +57,22 @@ public class Unit : MonoBehaviour
             return weapon;
         }
     }
+    SpriteRenderer speechless;
+    public SpriteRenderer Speechless
+    {
+        get
+        {
+            if(!speechless)speechless = transform.Find("Spine").Find("Speechless").GetComponent<SpriteRenderer>();
+            return speechless;
+        }
+    }
     private Renderer spineRenderer;
+    private MaterialPropertyBlock spinePropertyBlock_beenAttacked;
     private MaterialPropertyBlock spinePropertyBlock_hp;
     private MaterialPropertyBlock spinePropertyBlock_foreshadow;
+    private MaterialPropertyBlock spinePropertyBlock_alpha;
+    private MaterialPropertyBlock spinePropertyBlock_SelectEffect;
+    private MaterialPropertyBlock spinePropertyBlock_color;
     protected bool isReady = false;
     protected float lastGuardCheckTime, guardCheckInterval = 1f;
     private Unit[] hostiles;
@@ -113,7 +127,6 @@ public class Unit : MonoBehaviour
         maxHealth = unitTemplate.health;
         currentHP = maxHealth;
         targetPos = Vector3.zero;
-        UpdateMatHealth(1);
         SetSelected(false);
         Guard();
         InvokeRepeating(nameof(BackToPosition), 0.5f, unitTemplate.chaseDuration);
@@ -320,15 +333,49 @@ public class Unit : MonoBehaviour
         OnInitFinish?.Invoke(this);
 
     }
-    void UpdateMatHealth(float SetFloat)
+    public void UpdateMatSelectEffect(Color SetColor)
+    {
+        if (spinePropertyBlock_SelectEffect == null)
+        {
+            spinePropertyBlock_SelectEffect = new MaterialPropertyBlock();
+        }
+        if(SetColor == spinePropertyBlock_SelectEffect.GetColor("_SelectOutlineColor"))return;
+        spineRenderer.GetPropertyBlock(spinePropertyBlock_SelectEffect);
+        spinePropertyBlock_SelectEffect.SetColor("_SelectOutlineColor", SetColor);
+        spineRenderer.SetPropertyBlock(spinePropertyBlock_SelectEffect);
+    }
+    public void UpdateBeenAttackedEffect(Color SetColor)
+    {
+        if (spinePropertyBlock_beenAttacked == null)
+        {
+            spinePropertyBlock_beenAttacked = new MaterialPropertyBlock();
+        }
+        if(SetColor == spinePropertyBlock_beenAttacked.GetColor("_BeenAttackedColor"))return;
+        spineRenderer.GetPropertyBlock(spinePropertyBlock_beenAttacked);
+        spinePropertyBlock_beenAttacked.SetColor("_BeenAttackedColor", SetColor);
+        spineRenderer.SetPropertyBlock(spinePropertyBlock_beenAttacked);
+    }
+    public void UpdateMatHealth(float SetFloat)
     {
         if (spinePropertyBlock_hp == null)
         {
             spinePropertyBlock_hp = new MaterialPropertyBlock();
         }
+        if(SetFloat == spinePropertyBlock_hp.GetFloat("_Porcess"))return;
         spineRenderer.GetPropertyBlock(spinePropertyBlock_hp);
         spinePropertyBlock_hp.SetFloat("_Porcess", SetFloat);
         spineRenderer.SetPropertyBlock(spinePropertyBlock_hp);
+    }
+    public void UpdateColorMultiplication(Color SetColor)
+    {
+        if  (spinePropertyBlock_color == null)
+        {
+            spinePropertyBlock_color = new MaterialPropertyBlock();
+        }
+        if(SetColor == spinePropertyBlock_color.GetColor("_Color"))return;
+        spineRenderer.GetPropertyBlock(spinePropertyBlock_color);
+        spinePropertyBlock_color.SetColor("_Color", SetColor);
+        spineRenderer.SetPropertyBlock(spinePropertyBlock_color);
     }
     public void UpdateMatForeshadow(float SetFloat)
     {
@@ -336,9 +383,21 @@ public class Unit : MonoBehaviour
         {
             spinePropertyBlock_foreshadow = new MaterialPropertyBlock();
         }
+        if(SetFloat == spinePropertyBlock_foreshadow.GetFloat("_Foreshadow"))return;
         spineRenderer.GetPropertyBlock(spinePropertyBlock_foreshadow);
         spinePropertyBlock_foreshadow.SetFloat("_Foreshadow", SetFloat);
         spineRenderer.SetPropertyBlock(spinePropertyBlock_foreshadow);
+    }
+    public void UpdateMatAlpha(float SetFloat)
+    {
+        if (spinePropertyBlock_alpha == null)
+        {
+            spinePropertyBlock_alpha = new MaterialPropertyBlock();
+        }
+        if(SetFloat == spinePropertyBlock_alpha.GetFloat("_Alpha"))return;
+        spineRenderer.GetPropertyBlock(spinePropertyBlock_alpha);
+        spinePropertyBlock_alpha.SetFloat("_Alpha", SetFloat);
+        spineRenderer.SetPropertyBlock(spinePropertyBlock_alpha);
     }
     /// <summary>
     /// 数字范围映射
@@ -782,7 +841,6 @@ public class Unit : MonoBehaviour
     }
     public virtual IEnumerator DealAttackSimple()
     {
-
         while (targetOfAttack != null)
         {
             if(!animator)break;
@@ -809,6 +867,7 @@ public class Unit : MonoBehaviour
             GuardSimple();
         }
     }
+    
     protected void WeaponDisplay()
     {
         if (weaponType == WeaponTemplate.WeaponType.Null) return;
@@ -895,4 +954,53 @@ public class Unit : MonoBehaviour
         targetOfAttack = null;
     }
     #endregion 数据操作
+    #region 联网数据操作
+    protected bool Local()
+    {
+        if(RunModeData.CurrentRunMode == RunMode.Local)return true;
+        return false;
+    }
+    [Server]
+    public virtual IEnumerator Server_DealAttackSimple()
+    {
+        while (targetOfAttack != null)
+        {
+            if(!animator)break;
+            RunEffect(EffectTemplate.EffectType.Attacking);
+            animator.SetTrigger("DoAttack");
+            Client_DealAttackSimple_DoAttackAnimation();
+            OnAttacking?.Invoke();
+            WeaponDisplay();
+            targetOfAttack.SufferAttackSimple(unitTemplate.attackPower);
+            yield return new WaitForSeconds(1f / unitTemplate.attackSpeed);
+            if (IsDeadOrNull(targetOfAttack))
+            {
+                animator.SetTrigger("InterruptAttack");
+                Client_DealAttackSimple_InterruptAttackAnimation();
+                OnAttackFinish?.Invoke();
+                break;
+            }
+            if (state == UnitState.Dead)
+            {
+                yield break;
+            }
+        }
+
+        if (state == UnitState.Attacking)
+        {
+            GuardSimple();
+        }
+    }
+    [ClientRpc]
+    void Client_DealAttackSimple_DoAttackAnimation()
+    {
+        animator.SetTrigger("DoAttack");
+    }
+    [ClientRpc]
+    void Client_DealAttackSimple_InterruptAttackAnimation()
+    {
+        animator.SetTrigger("InterruptAttack");
+    }
+    
+    #endregion 联网数据操作
 }

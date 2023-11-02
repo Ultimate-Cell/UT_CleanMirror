@@ -123,7 +123,7 @@ Material:
     - _BlendDst: 1
     - _BlendOp: 0
     - _BlendSrc: 5
-    - _Brightness: 1
+    - _Brightness: 5
     - _BumpScale: 1
     - _CameraFadingEnabled: 0
     - _CameraFarFadeDistance: 2
@@ -176,7 +176,7 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 5
     - _Stencil: 0
-    - _StencilComp: 0
+    - _StencilComp: 8
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilRef: 1

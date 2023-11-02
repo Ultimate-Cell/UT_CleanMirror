@@ -1,18 +1,18 @@
 ManifestFileVersion: 0
-CRC: 2461575025
+CRC: 3009662692
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: audio
+      Name: gameobj
       Dependencies: {}
     Info_1:
-      Name: uipage
-      Dependencies:
-        Dependency_0: spritepreferb
-        Dependency_1: gameobj
+      Name: audio
+      Dependencies: {}
     Info_2:
       Name: spritepreferb
       Dependencies: {}
     Info_3:
-      Name: gameobj
-      Dependencies: {}
+      Name: uipage
+      Dependencies:
+        Dependency_0: gameobj
+        Dependency_1: spritepreferb

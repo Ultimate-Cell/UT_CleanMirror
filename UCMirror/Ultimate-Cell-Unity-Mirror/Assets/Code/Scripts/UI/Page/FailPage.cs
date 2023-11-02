@@ -4,17 +4,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class FailPage : BaseUI
+public class FailPage : MonoBehaviour
 {
-    public override UIType GetUIType()
-    {
-        return UIType.None;
-    }
 
     #region 交互组件
 
+    [Header("Canvas")]
+    public Canvas canvas;
+
     [Header("按钮")]
-    public Button againBtn;
     public Button backBtn;
 
     [Header("文本")]
@@ -27,11 +25,11 @@ public class FailPage : BaseUI
 
     #region 业务逻辑
 
-    public override void OnStart()
+    public void Start()
     {
         #region 相机逻辑
         //这里需要把UI设定为ScreenSpace
-        Camera uiCam = GameObject.FindGameObjectWithTag("UICamera").GetComponent<Camera>();
+        Camera uiCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         Canvas canvas = this.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
         canvas.worldCamera = uiCam;
@@ -44,7 +42,6 @@ public class FailPage : BaseUI
         anim.Play("A_Fail");
 
         //按键绑定
-        BtnEvent.RigisterButtonClickEvent(againBtn.transform.gameObject, p => { ClickAgainBtn(); });
         BtnEvent.RigisterButtonClickEvent(backBtn.transform.gameObject, p => { ClickBackBtn(); });
 
         Invoke("PlayEffect", 0.5f);

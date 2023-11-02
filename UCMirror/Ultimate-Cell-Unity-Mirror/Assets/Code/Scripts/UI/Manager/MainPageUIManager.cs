@@ -1,6 +1,8 @@
 ﻿using Common;
 using GameFrameWork;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static UIManager;
 
@@ -54,9 +56,14 @@ public class MainPageUIManager : MonoBehaviour
     // 果实树页面
     public GameObject FruitTreePage;
 
+    [Header("联网")]
+    public NetWorkMatchingBehaviour behaviour;
+
+    public SettingsInfo host;
+
     private void Start()
     {
-        // StartMatchingButton.onClick.AddListener(() => { StartMatching(); });
+        StartMatchingButton.onClick.AddListener(() => { StartMatching(); });
 
         UserInfoButton.onClick.AddListener(() => { DisplaySecondaryPage("UserInfoPage"); });
 
@@ -91,12 +98,27 @@ public class MainPageUIManager : MonoBehaviour
     /// </summary>
     void StartMatching()
     {
-        var CommunicationManager = GameObject.Find("LanNetWorkManager").gameObject.GetComponent<CommunicationInteractionManager>();
+        GameObject.Find("NetWorkMatchingBehaviour").GetComponent<NetWorkMatchingBehaviour>().OnJoinServer(host.localhost);
+    }
 
-        CommunicationManager.C2G_StartMatching(0);
+    /// <summary>
+    /// 单机启动
+    /// </summary>
+    void StartMatchingSingle() 
+    {
+        var sceneLoader = GameObject.Find("SceneLoader").gameObject.GetComponent<MainSceneControlManager>();
 
-        StartMatchingButton.gameObject.SetActive(false);
+        sceneLoader.LoadMainFightScene();
+    }
 
+    /// <summary>
+    /// Ping pong Test
+    /// </summary>
+    void StartMatchingPongTest()
+    {
+        var sceneLoader = GameObject.Find("SceneLoader").gameObject.GetComponent<MainSceneControlManager>();
+
+        sceneLoader.LoadPingPongScene();
     }
 
     /// <summary>

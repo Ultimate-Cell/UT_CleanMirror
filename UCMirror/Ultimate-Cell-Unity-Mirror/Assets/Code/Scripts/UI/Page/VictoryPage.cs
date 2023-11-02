@@ -1,105 +1,160 @@
-using GameFrameWork;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
+using UnityEngine.TextCore.Text;
+using Spine.Unity;
+using TMPro;
+using System.Linq;
 
-public class VictoryPage : BaseUI
+public class VictoryPage : MonoBehaviour
 {
-    public override UIType GetUIType()
-    {
-        return UIType.VictoryPage;
-    }
-
-    #region 交互组件
-
-    [Header("星星")]
-    public GameObject Star1;
-    public GameObject Star2;
-    public GameObject Star3;
-
-    [Header("按钮")]
-    public Button NextMapBtn;
+    #region 浜や簰缁勪欢
+    [Header("鎸夐挳")]
     public Button BackBtn;
 
-    [Header("数值")]
-    public Text FractionText;
-    public Text GoldText;
-    public Text ExpText;
-
-    [Header("特效")]
+    [Header("鐗规晥")]
     public ParticleSystem VictoryEffect;
 
-    private int fractio = 0;
-    private int gold = 0;
-    private int exp = 0;
+    public Image image;
+
+    private float Speed = 0.2f;
+
+    public List<GameObject> Stars = new List<GameObject>();
+
+    public List<SkeletonGraphic> Characters = new List<SkeletonGraphic>();
+
+    public float brightness = 5f;
+
+    [Header("Canvas")]
+    public Canvas canvas;
+
+    public GameObject Character;
+
+    private Vector3 CharacterTarget;
+
+    public GameObject VictoryTex;
+
+    public GameObject RankTex;
+
+    public GameObject RankStyle;
+
+    public GameObject ButtomInfo;
+
+    private Image[] images;
+
+    private TextMeshProUGUI[] textmeshpros;
+
     #endregion
 
-    #region 业务
+    #region 涓氬姟
 
-    public override void OnStart()
+    private void Start()
     {
-        #region 相机逻辑
-        //这里需要把UI设定为ScreenSpace
-        Camera uiCam = GameObject.FindGameObjectWithTag("UICamera").GetComponent<Camera>();
-        Canvas canvas = this.GetComponent<Canvas>();
+        BackBtn.onClick.AddListener(() => { BackMainPage(); });
+
+        Character.transform.DOLocalMoveX(-1400f, 0f);
+
+        VictoryTex.transform.DOLocalMoveX(-1400f, 0f);
+
+        RankTex.transform.DOLocalMoveX(-1400f, 0f);
+
+        RankStyle.transform.DOLocalMoveX(-1400f, 0f);
+
+        images = ButtomInfo.GetComponentsInChildren<Image>();
+
+        textmeshpros = ButtomInfo.GetComponentsInChildren<TextMeshProUGUI>();
+
+        foreach (var image in images)
+        {
+            image.DOColor(new Color(1f, 1f, 1f, 0f), 0f);
+
+        }
+
+        foreach (var mesh in textmeshpros)
+        {
+            mesh.DOColor(new Color(1f, 1f, 1f, 0f), 0f);
+
+        }
+
+        foreach (var obj in Stars)
+        {
+            obj.GetComponent<Image>().DOColor(new Color(1f, 1f, 1f, 0f), 0f);
+        }
+
+        //杩欓噷闇�瑕佹妸UI璁惧畾涓篠creenSpace
+        Camera uiCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
         canvas.worldCamera = uiCam;
-        canvas.sortingOrder = 200;
-        canvas.planeDistance = 5;
+        //canvas.sortingOrder = 200;
+        canvas.planeDistance = 250;
         canvas.sortingLayerName = "Flow";
-        #endregion
 
-        BtnEvent.RigisterButtonClickEvent(NextMapBtn.transform.gameObject, p => { });
-        BtnEvent.RigisterButtonClickEvent(BackBtn.transform.gameObject, p => { });
-
-        int targetFractio = 302;
-        DOTween.To(() => fractio, x => fractio = x, targetFractio, 2);
-
-        int targetGold = 199;
-        DOTween.To(() => gold, x => gold = x, targetGold, 2);
-
-        int targetExp = 32;
-        DOTween.To(() => exp, x => exp = x, targetExp, 2);
-
-        Animation anim = GetComponent<Animation>();
-        anim.Play("A_Victory");
         Invoke("PlayEffect", 1f);
-
-        int starNum = 3;
-        if(starNum == 3)
-        {
-            Invoke("Star1Load", 0.5f);
-            Invoke("Star2Load", 0.7f);
-            Invoke("Star3Load", 0.9f);
-        }
-    }
-
-    public override void OnUpdate(float dealTime)
-    {
-        FractionText.text = fractio.ToString();
-        GoldText.text = gold.ToString();
-        ExpText.text = exp.ToString();
-
     }
 
     void PlayEffect()
     {
-        VictoryEffect.Play();
+        var brightnessMaterial = image.material;
+
+        brightnessMaterial.SetFloat("_Brightness", brightness);
+
+        image.fillAmount = 0;
+
+        image.DOFillAmount(1f, Speed).OnComplete( () =>
+        {
+            image.material = null;
+
+            VictoryEffect.Play();
+
+            VictoryTex.transform.DOLocalMoveX(354f, 0.8f).OnComplete(() => 
+            {
+                Vector3 targetScale = new Vector3(1.5f, 1.5f, 1.5f);
+
+                foreach (var obj in Stars)
+                {
+                    obj.GetComponent<Image>().DOColor(new Color(1f, 1f, 1f, 1f), 0f);
+
+                    obj.transform.DOScale(targetScale, 0.2f).SetLoops(-1, LoopType.Yoyo);
+                }
+            });
+
+            RankTex.transform.DOLocalMoveX(223.1f, 1f).SetEase(Ease.OutBounce);
+
+            RankStyle.transform.DOLocalMoveX(418.7f, 1f).SetEase(Ease.OutBounce);
+
+            RankStyle.transform.DOLocalMoveY(RankStyle.transform.localPosition.y - 15f, 0.5f).SetLoops(-1, LoopType.Yoyo);
+
+            foreach (var image in images)
+            {
+                image.DOColor(new Color(1f, 1f, 1f, 1f), 1f);
+
+            }
+
+            foreach (var mesh in textmeshpros)
+            {
+                mesh.DOColor(new Color(1f, 1f, 1f, 1f), 1f);
+
+            }
+
+            Character.transform.DOLocalMoveX(-300, 3f).OnComplete(() =>
+            {
+
+                foreach (var chat in Characters) 
+                {
+                    chat.AnimationState.SetAnimation(0, "idle", true);
+                }
+            });
+        });
     }
 
-    void Star1Load()
+    void BackMainPage() 
     {
-        UIManager.Instance.OpenSubUI(UIType.StarItem, null, Star1);
-    }
+        var sceneLoader = GameObject.Find("SceneLoader").gameObject.GetComponent<MainSceneControlManager>();
 
-    void Star2Load()
-    {
-        UIManager.Instance.OpenSubUI(UIType.StarItem, null, Star2);
-    }
+        // sceneLoader.ClearAllBroadCast();
 
-    void Star3Load()
-    {
-        UIManager.Instance.OpenSubUI(UIType.StarItem, null, Star3);
+        sceneLoader.LoadMainBasicScene();
     }
 
     #endregion

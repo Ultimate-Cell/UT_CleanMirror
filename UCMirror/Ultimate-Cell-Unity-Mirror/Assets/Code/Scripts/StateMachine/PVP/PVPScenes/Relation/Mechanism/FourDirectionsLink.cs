@@ -6,6 +6,7 @@ using System.Collections;
 using System.Linq;
 using UnityEngine.Events;
 using UC_PlayerData;
+using DG.Tweening;
 public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
 {
       bool active = true;
@@ -183,7 +184,7 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
       public float range = 3f;
       [HideInInspector]
       public Color rangeColor = Color.green;
-      float linkMinStrengthIncrease = 0.2f; // 联结最小强度增加
+      // float linkMinStrengthIncrease = 0.2f; // 联结最小强度增加
       /// <summary>
       /// 表现
       /// </summary>
@@ -224,18 +225,34 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
             }
       }
       private bool died = false;
+      Tween tween_Speechless;
 
       void Start()
       {
-            active = false;
-            died = false;
-            NeedRender = true;
-            Self.TetriMechanism.TetrisBlockSimple.OnUpdatDisplay += ()=>{ if(!active)active = true;};
-            Self.unitBase.OnDie += (Unit unit)=>{this.StopAllCoroutines();died = true;};
-            InitLevel();
-            linkMinStrengthIncrease = 0.2f;
-            // 联结表现          
-            Invoke(nameof(SetSkine), 0.1f);
+            if(Self.Local())
+            {
+                  active = false;
+                  died = false;
+                  NeedRender = true;
+                  Self.TetriMechanism.TetrisBlockSimple.OnUpdatDisplay += ()=>{ if(!active)active = true;};
+                  Self.unitBase.OnDie += (Unit unit)=>{this.StopAllCoroutines();died = true;};
+                  InitLevel();
+                  // linkMinStrengthIncrease = 0.2f;
+                  // 联结表现          
+                  Invoke(nameof(SetSkine), 0.1f);
+            }else
+            {
+                  if(!Self.isServer)return;
+                  active = false;
+                  died = false;
+                  NeedRender = true;
+                  Self.TetriMechanism.TetrisBlockSimple.OnUpdatDisplay += ()=>{ if(!active)active = true;};
+                  Self.unitBase.OnDie += (Unit unit)=>{this.StopAllCoroutines();died = true;};
+                  InitLevel();
+                  // linkMinStrengthIncrease = 0.2f;
+                  // 联结表现          
+                  Invoke(nameof(SetSkine), 0.1f);
+            }
             
       }
       public void LateUpdate()
@@ -244,8 +261,16 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
       }
       public void Active()
       {
-            LinkChecker();
-            UpdateLevel();
+            if(self.Local())
+            {
+                  LinkChecker();
+                  UpdateLevel();
+            }else
+            {
+                  if(!self.isServer)return;
+                  LinkChecker();
+                  UpdateLevel();
+            }
       }
       void LinkChecker()
       {   
@@ -259,9 +284,9 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
             var WestTetri = WestBlock ? WestBlock.BlockBuoyHandler.tetriBuoySimple : null;
             if (NorthTetri)
             {
-                  if(North != NorthTetri.TetriUnitSimple.haveUnit.Soldier)
+                  if(North != NorthTetri.TetriUnitSimple.HaveUnit.Soldier)
                   {
-                        North = NorthTetri.TetriUnitSimple.haveUnit.Soldier;
+                        North = NorthTetri.TetriUnitSimple.HaveUnit.Soldier;
                         SoldiersStartRelation(Self,North);
                   }else
                   {
@@ -275,9 +300,9 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
             }
             if (EastTetri)
             {
-                  if(East != EastTetri.TetriUnitSimple.haveUnit.Soldier)
+                  if(East != EastTetri.TetriUnitSimple.HaveUnit.Soldier)
                   {
-                        East = EastTetri.TetriUnitSimple.haveUnit.Soldier;
+                        East = EastTetri.TetriUnitSimple.HaveUnit.Soldier;
                         SoldiersStartRelation(Self,East);
                   }else
                   {
@@ -290,9 +315,9 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
             }
             if (WestTetri)
             {
-                  if(West != WestTetri.TetriUnitSimple.haveUnit.Soldier)
+                  if(West != WestTetri.TetriUnitSimple.HaveUnit.Soldier)
                   {
-                        West = WestTetri.TetriUnitSimple.haveUnit.Soldier;
+                        West = WestTetri.TetriUnitSimple.HaveUnit.Soldier;
                         SoldiersStartRelation(Self,West);
                   }else
                   {
@@ -305,9 +330,9 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
             }
             if (SouthTetri)
             {
-                  if(South != SouthTetri.TetriUnitSimple.haveUnit.Soldier)
+                  if(South != SouthTetri.TetriUnitSimple.HaveUnit.Soldier)
                   {
-                        South = SouthTetri.TetriUnitSimple.haveUnit.Soldier;
+                        South = SouthTetri.TetriUnitSimple.HaveUnit.Soldier;
                         SoldiersStartRelation(Self,South);
                   }else
                   {
@@ -450,7 +475,6 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
       private IEnumerator WaitParticleReduceMorale(SoldierBehaviors soldier,ParticleSystem particleSystem)
       {
             if(!soldier || !particleSystem)yield return null;
-            // 等待粒子特效开始播放
             particleSystem.Play();
             // while ( particleSystem.isPlaying && !died)
             // {
@@ -462,6 +486,17 @@ public class FourDirectionsLink: MonoBehaviour, ISoldierRelation
             // soldier.morale.ModifyBaseMinMorale(soldier,-linkMinStrengthIncrease);
             soldier.morale.ReduceMorale(soldier, 1.06f, false);
             soldier.morale.EffectByMorale(soldier,ref soldier.strength);
+            if(!soldier.unitBase.Speechless)yield return null;
+            tween_Speechless?.Kill();
+            Color startColor = Color.white;
+            Color endColor = Color.clear;
+            Color speechlessColor = Color.white;
+            soldier.unitBase.Speechless.color = endColor;
+            tween_Speechless = DOVirtual.Color(startColor, endColor, 0.9f, (TweenCallback<Color>)((Color value) =>
+            {
+                  speechlessColor = value;
+                  soldier.unitBase.Speechless.color = speechlessColor;
+            }));
       }
       void SetSkine()
       {

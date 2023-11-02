@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+CRC: 3086599655
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: d9a45ee4e7baa45f66a914326e0ba512
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: b9b5e4166a380737bc2c1caf3d1cc55d
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: dfec664571c86f1499dbadb997ec93c8, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: Assembly-CSharp
+  ClassName: ReferenceCollectorData
+Assets:
+- Assets/Level/Preferbs/SpritePreferb.prefab
+- Assets/Art/Img/BeConfigItemBG.png
+- Assets/Art/Img/SkillIcon_0.png
+- Assets/Art/Img/ConfigItemBG.png
+- Assets/Art/Img/T_SaiEr.png
+Dependencies: []

@@ -181,11 +181,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a8289d25cdead64c8523e2bb9d3da99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ServerSwitchCheck: 1
   sceneToLoads:
   - sceneAsset: {fileID: 102900000, guid: 26e146edf44ca8f4d81de5ccd2dd610a, type: 3}
     scenePath: Assets/Level/Scenes/BasicScene/ArtBackGroundScene.unity
-  selectivelyLoadScene: []
+  - sceneAsset: {fileID: 102900000, guid: 71a15b8407c82dd4eb4a99b6ce4b81fc, type: 3}
+    scenePath: Assets/Level/Scenes/MainFightScene.unity
 --- !u!114 &1205101383
 MonoBehaviour:
   m_ObjectHideFlags: 0

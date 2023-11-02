@@ -8,9 +8,24 @@ using Mirror;
 using DG.Tweening;
 public class TetrisBlockSimple : NetworkBehaviour
 {
+#region 数据对象
     [SyncVar]
     public Vector2 posId;
     public float occupyingTime = 3f;
+    public float OccupyingTime
+    {
+        get
+        {
+            return occupyingTime;
+        }
+        set
+        {
+            
+            if(value<=UnitData.MinOccupyingTime){value= UnitData.MinOccupyingTime;}
+            if(value>=UnitData.MaxOccupyingTime){value= UnitData.MaxOccupyingTime;}
+            occupyingTime = value;
+        }
+    }
     public Player player = Player.NotReady;
     public Player Player
     {
@@ -23,6 +38,10 @@ public class TetrisBlockSimple : NetworkBehaviour
             // if(!isClient)return;
             if(player == value)return;
             player = value;
+            foreach(var tetri in ChildTetris)
+            {
+                tetri.player = player;
+            }
             Client_Reflash();
         }
     }
@@ -45,6 +64,21 @@ public class TetrisBlockSimple : NetworkBehaviour
     public Vector3 rotationPoint;
     public List<TetriBlockSimple> pioneerTetris;
     public List<TetriBlockSimple> childTetris;
+    public List<TetriBlockSimple> ChildTetris
+    {
+        get
+        {
+            if(childTetris.Count != 0) return childTetris;
+            foreach (Transform child in transform)
+            {
+                if(child.GetComponent<TetriBlockSimple>() == null)continue;
+                TetriBlockSimple tetriBuoySimple = child.GetComponent<TetriBlockSimple>();
+                if(childTetris.Contains(tetriBuoySimple))continue;
+                childTetris.Add(tetriBuoySimple);
+            }
+            return childTetris;
+        }
+    }
     public UnityAction OnTetrisMoveing;
     public BlocksCreator_Main blocksCreator;
     public BlocksCreator_Main BlocksCreator
@@ -75,7 +109,7 @@ public class TetrisBlockSimple : NetworkBehaviour
             // Debug.Log($"移动方向改变：moveUp:{moveUp}");
             // if(moveUp == value)return;
             moveUp = value;
-            Stop_X();
+            Stop();
             Active_Z();
             Move_Z();
         }
@@ -92,22 +126,6 @@ public class TetrisBlockSimple : NetworkBehaviour
     [HideInInspector]
     public Color color;
     public Sequence sequence;
-    [Header("UC_PVP:")]
-    [SyncVar]
-    public int serverID = -1;
-    public int ServerID
-    {
-        get
-        {
-            return serverID;
-        }
-        set
-        {
-            if(serverID == value)return;
-            SyncOtherTetrisComponent(value);
-            serverID = value;
-        }
-    }
     TetrisBuoySimple tetrisBuoySimple;
     private TetrisUnitSimple tetrisUnitSimple;
     public TetrisUnitSimple TetrisUnitSimple
@@ -118,27 +136,12 @@ public class TetrisBlockSimple : NetworkBehaviour
             return tetrisUnitSimple;
         }
     }
-    [SyncVar]
-    public int rotateTimes;
-    public int RotateTimes
-    {
-        get
-        {
-            return rotateTimes;
-        }
-        set
-        {
-            // Debug.Log($"rotateTimes:{rotateTimes}");
-            if(rotateTimes == value)return;
-            if(!tetrisBuoySimple)tetrisBuoySimple = transform.GetComponent<TetrisBuoySimple>();
-            tetrisBuoySimple.rotateTimes = value;
-            rotateTimes = value;
-            if(rotateTimes!=4)return;
-            rotateTimes = 0;
-        }
-    }
-    public string type;
-    public bool autoID = true;
+    
+#endregion 数据对象
+#region 联网数据对象
+    
+#endregion 联网数据对象
+#region 数据关系
     void Awake()
     {
        color = transform.GetChild(0).GetComponent<SpriteRenderer>().color;
@@ -150,17 +153,26 @@ public class TetrisBlockSimple : NetworkBehaviour
     {
        foreach (Transform child in transform)
        {
-           childTetris.Add(child.GetComponent<TetriBlockSimple>());
-           child.GetComponent<TetriBlockSimple>().CantPutCallback += CantPutAction;
+           // ChildTetris.Add(child.GetComponent<TetriBlockSimple>());
+           child.GetComponent<TetriBlockSimple>().CantPutCallback += Event_CantPutAction;
            child.GetComponent<TetriBlockSimple>().player = player;
        }
        positionStack = new Stack<Vector3>();
        TB_cache = new();
+       if(player == Player.Player1)
+       {
+            UIData.OnPlayer1MoraleAccumulationMaxed += (Player player) => {
+                OccupyingTime/=2;
+            };
+       }else if (player == Player.Player2)
+       {
+            UIData.OnPlayer2MoraleAccumulationMaxed += (Player player) => {
+                OccupyingTime/=2;
+            };
+       }
        if(Local())return;
        if(!isServer)return;
-       if(!autoID)return;
-       serverID = ServerLogic.GetTetrisGroupID();
-       // Debug.Log($"serverID:{serverID}");
+      
     }
     public void Init()
     {
@@ -170,25 +182,23 @@ public class TetrisBlockSimple : NetworkBehaviour
        blocksCreator = FindObjectOfType<BlocksCreator_Main>();
        foreach (Transform child in transform)
        {
-           childTetris.Add(child.GetComponent<TetriBlockSimple>());
-           child.GetComponent<TetriBlockSimple>().CantPutCallback += CantPutAction;
+           ChildTetris.Add(child.GetComponent<TetriBlockSimple>());
+           child.GetComponent<TetriBlockSimple>().CantPutCallback += Event_CantPutAction;
            child.GetComponent<TetriBlockSimple>().player = player;
        }
        positionStack = new Stack<Vector3>();
        TB_cache = new();
-       if(Local())return;
-       if(!isServer)return;
-       if(!autoID)return;
-       serverID = ServerLogic.GetTetrisGroupID();
+       
     }
-    
+#endregion 数据关系
+#region 数据操作
     public bool Active()
     {
         Stop_X();
         Stop_Z();
         if(!transform.parent)return false;
         blocksCreator = transform.parent.GetComponent<BlocksCreator_Main>();
-        foreach (TetriBlockSimple child in childTetris)
+        foreach (TetriBlockSimple child in ChildTetris)
         {
             if(child == null)continue;
             child.player = player;
@@ -205,7 +215,7 @@ public class TetrisBlockSimple : NetworkBehaviour
         
         if(!transform.parent)return false;
         blocksCreator = transform.parent.GetComponent<BlocksCreator_Main>();
-        foreach (TetriBlockSimple child in childTetris)
+        foreach (TetriBlockSimple child in ChildTetris)
         {
             if(child == null)continue;
             child.player = player;
@@ -223,7 +233,7 @@ public class TetrisBlockSimple : NetworkBehaviour
     {
         if(!transform.parent)return false;
         blocksCreator = transform.parent.GetComponent<BlocksCreator_Main>();
-        foreach (TetriBlockSimple child in childTetris)
+        foreach (TetriBlockSimple child in ChildTetris)
         {
             if(child == null)continue;
             child.player = player;
@@ -240,7 +250,7 @@ public class TetrisBlockSimple : NetworkBehaviour
     public bool ColliderCheck()
     {
         List<bool> colliders = new();
-        foreach(var childTetri in childTetris)
+        foreach(var childTetri in ChildTetris)
         {
             colliders.Add(childTetri.CheckCollider());
         }
@@ -250,7 +260,7 @@ public class TetrisBlockSimple : NetworkBehaviour
     public bool ColliderCheckOnEndDrag()
     {
         List<bool> colliders = new();
-        foreach(var childTetri in childTetris)
+        foreach(var childTetri in ChildTetris)
         {
             colliders.Add(childTetri.CheckColliderOnEndDrag());
         }
@@ -268,23 +278,23 @@ public class TetrisBlockSimple : NetworkBehaviour
     }
     public void FailToCreat()
     {
-        foreach(var child in childTetris)
+        foreach(var child in ChildTetris)
         {
             child.FailToCreat();
         }
     }
     public void SuccessToCreat()
     {
-        foreach(var child in childTetris)
+        foreach(var child in ChildTetris)
         {
             child.SuccessToCreat();
         }
     }
-    void CantPutAction(TetriBlockSimple tetriBlock)
+    void Event_CantPutAction(TetriBlockSimple tetriBlock)
     {
         RollbackPosition();
     }
-    void CantPutAction()
+    public void CantPutAction()
     {
         RollbackPosition();
     }
@@ -313,16 +323,17 @@ public class TetrisBlockSimple : NetworkBehaviour
             TB_cache.Clear();
         }
         Dictionary<TetriBuoySimple,BlockBuoyHandler> buoyMarkersTemp = new();
-        foreach (TetriBlockSimple tetriBlock in childTetris)
+        foreach (TetriBlockSimple tetriBlock in ChildTetris)
         {
+            if(!tetriBlock)continue;
             BlockTetriHandler blockCurrent = null;
             blockCurrent = blocksCreator.blocks.Find((block) => block.posId == new Vector2(tetriBlock.PosId.x,tetriBlock.PosId.y)).GetComponent<BlockTetriHandler>();
             if(!blockCurrent)continue;
             blockCurrent.tetriBlockSimpleHolder = tetriBlock;
             tetriBlock.currentBlockTetriHandler = blockCurrent;
             // 可视化
-            // blockCurrent.transform.localScale -= Vector3.one*0.3f;
-            // tetriBlock.transform.localScale -= Vector3.one*0.3f;
+            // blockCurrent.transform.localScale -= Vector3.one*0.1f;
+            // tetriBlock.transform.localScale -= Vector3.one*0.1f;
             if (TB_cache.ContainsKey(tetriBlock))continue;
             TB_cache.Add(tetriBlock,blockCurrent);
             TetriBuoySimple t = tetriBlock.GetComponent<TetriBuoySimple>();
@@ -330,7 +341,6 @@ public class TetrisBlockSimple : NetworkBehaviour
             BlockBuoyHandler b = blockCurrent.GetComponent<BlockBuoyHandler>();
             b.posId = blockCurrent.posId;
             buoyMarkersTemp.Add(t,b);
-            
         }
         OnCacheUpdateForBuoyMarkers?.Invoke(buoyMarkersTemp);
         OnUpdatDisplay?.Invoke();
@@ -341,17 +351,17 @@ public class TetrisBlockSimple : NetworkBehaviour
         // 取前方没有砖块的砖块
         if(player == Player.Player1)
         {
-            foreach(var childTetri in childTetris)
+            foreach(var childTetri in ChildTetris)
             {
-                bool P1FrontObj = childTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x+1,childTetri.PosId.y));
+                bool P1FrontObj = ChildTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x+1,childTetri.PosId.y));
                 if(P1FrontObj)continue;
                 pioneerTetris.Add(childTetri);
             }
         }else if (player == Player.Player2)
         {
-            foreach(var childTetri in childTetris)
+            foreach(var childTetri in ChildTetris)
             {
-                bool P2FrontObj = childTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x-1,childTetri.PosId.y));
+                bool P2FrontObj = ChildTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x-1,childTetri.PosId.y));
                 if(P2FrontObj)continue;
                 pioneerTetris.Add(childTetri);
             }
@@ -369,17 +379,17 @@ public class TetrisBlockSimple : NetworkBehaviour
         // 取上下方没有砖块的砖块
         if(MoveUp)
         {
-            foreach(var childTetri in childTetris)
+            foreach(var childTetri in ChildTetris)
             {
-                bool upFrontObj = childTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x,childTetri.PosId.y+1));
+                bool upFrontObj = ChildTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x,childTetri.PosId.y+1));
                 if(upFrontObj)continue;
                 pioneerTetris.Add(childTetri);
             }
         }else
         {
-            foreach(var childTetri in childTetris)
+            foreach(var childTetri in ChildTetris)
             {
-                bool downFrontObj = childTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x,childTetri.PosId.y-1));
+                bool downFrontObj = ChildTetris.FirstOrDefault(obj => obj.PosId == new Vector2(childTetri.PosId.x,childTetri.PosId.y-1));
                 if(downFrontObj)continue;
                 pioneerTetris.Add(childTetri);
             }
@@ -391,19 +401,23 @@ public class TetrisBlockSimple : NetworkBehaviour
         //     pioneerBlock.transform.localScale += 0.2f * Vector3.one;
         // }
     }
-    public void Stop()
+    public void Stop(bool cancleOccupied = true)
     {
         Stop_X();
         Stop_Z();
+        if(!cancleOccupied)return;
+        CancleOccupied();
     }
     public void Stop_X()
     {
         moveStepX = 0;
+        if(!IsInvoking(nameof(MoveActive_X)))return;
         CancelInvoke(nameof(MoveActive_X));
     }
     public void Stop_Z()
     {
         moveStepZ = 0;
+        if(!IsInvoking(nameof(MoveActive_Z)))return;
         CancelInvoke(nameof(MoveActive_Z));
     }
     public void Move()
@@ -414,18 +428,19 @@ public class TetrisBlockSimple : NetworkBehaviour
     public void Move_X()
     {
         moveStepX = 1;
-        InvokeRepeating(nameof(MoveActive_X),0,occupyingTime);
+        InvokeRepeating(nameof(MoveActive_X),0,OccupyingTime);
     }
     public void Move_Z()
     {
         moveStepZ = MoveUp ? 1 : -1;
-        InvokeRepeating(nameof(MoveActive_Z),0,occupyingTime);
+        InvokeRepeating(nameof(MoveActive_Z),0,OccupyingTime);
     }
     void MoveActive_X()
     {
+        // Debug.Log($"moveStepX!!!:{ValidMove_X()}");
         if(!ValidMove_X())return;
         OnStartMove?.Invoke();
-        foreach (TetriBlockSimple child in childTetris)
+        foreach (TetriBlockSimple child in ChildTetris)
         {
             if(!child)continue;
             child.DoGroupMoveCheck();
@@ -441,6 +456,7 @@ public class TetrisBlockSimple : NetworkBehaviour
         posId = new Vector2(transform.localPosition.x,transform.localPosition.z);
         OnTetrisMoveing?.Invoke();
         EvaluateCollision();
+        // EvaluatePioneers_X();
         
     }
     void MoveActive_Z()
@@ -448,7 +464,7 @@ public class TetrisBlockSimple : NetworkBehaviour
         if(!ValidMove_Z())return;
         // Debug.Log($"moveStepZ!!!:{moveStepZ}");
         OnStartMove?.Invoke();
-        foreach (TetriBlockSimple child in childTetris)
+        foreach (TetriBlockSimple child in ChildTetris)
         {
             if(!child)continue;
             child.DoGroupMoveCheck();
@@ -457,6 +473,7 @@ public class TetrisBlockSimple : NetworkBehaviour
         posId = new Vector2(transform.localPosition.x,transform.localPosition.z);
         OnTetrisMoveing?.Invoke();
         EvaluateCollision();
+        // EvaluatePioneers_Z();
         
     }
     public bool IsMoving()
@@ -465,13 +482,26 @@ public class TetrisBlockSimple : NetworkBehaviour
     }
     public void Rotate(Vector3 axis)
     {
-        OnRotate?.Invoke(true);
+        
+        bool reverse = false;
+        OnRotate?.Invoke(reverse);
         transform.RotateAround(transform.TransformPoint(rotationPoint), axis, 90);
+        foreach (TetriBlockSimple child in ChildTetris)
+        {
+            if(!child)continue;
+            child.RotateForRecalculateDisplayRange(reverse);
+        }
     }
     public void RotateReverse(Vector3 axis)
     {
-        OnRotate?.Invoke(false);
+        bool reverse = true;
+        OnRotate?.Invoke(reverse);
         transform.RotateAround(transform.TransformPoint(rotationPoint), axis, -90);
+        foreach (TetriBlockSimple child in ChildTetris)
+        {
+            if(!child)continue;
+            child.RotateForRecalculateDisplayRange(reverse);
+        }
     }
     bool ValidMove_X()
     {
@@ -517,12 +547,14 @@ public class TetrisBlockSimple : NetworkBehaviour
         foreach(var pineer in pioneerTetris)
         {
             if(!pineer)continue;
+            // pineer.transform.localScale = Vector3.one*3f;
             BlockTetriHandler blockCurrent = pineer.CurrentBlock();
             condition.Add(blockCurrent);
             BlockTetriHandler blockNext = pineer.NextBlock_X();
             condition.Add(blockNext);
             condition.Add(pineer.CanMove);
             condition.Add(pineer.BlockNextCheckBuoy(blockNext));
+            // Debug.Log($"cccccc:{pineer.CanMove}");
         }
         bool allTrue = condition.All(b => b);
         return allTrue;
@@ -532,7 +564,7 @@ public class TetrisBlockSimple : NetworkBehaviour
         moveStepX = 0;
         OnStartMove?.Invoke();
         tetrisCheckMode = TetrisCheckMode.Normal;
-        foreach(var child in childTetris)
+        foreach(var child in ChildTetris)
         {
             if(!child)continue;
             child.DropCheck();
@@ -554,7 +586,7 @@ public class TetrisBlockSimple : NetworkBehaviour
             condition.Add(pineer.CanMove);
             condition.Add(pineer.BlockNextCheckBuoy(blockNext));
         }
-        foreach (TetriBlockSimple child in childTetris)
+        foreach (TetriBlockSimple child in ChildTetris)
         {
             if(!child)continue;
             condition.Add(child.CanMove);
@@ -568,16 +600,16 @@ public class TetrisBlockSimple : NetworkBehaviour
     public void Display_AfterCreate()
     {
         sequence = DOTween.Sequence();
-        sequence.Append(transform.DOLocalMoveY(0.2f, occupyingTime/4).SetEase(Ease.Linear));
-        sequence.Append(transform.DOLocalMoveY(0f, occupyingTime/4).SetEase(Ease.Linear));
+        sequence.Append(transform.DOLocalMoveY(0.2f, OccupyingTime/4).SetEase(Ease.Linear));
+        sequence.Append(transform.DOLocalMoveY(0f, OccupyingTime/4).SetEase(Ease.Linear));
         sequence.SetLoops(-1, LoopType.Yoyo);
     }
     public bool OnBuoyDrop()
     {
-        if(childTetris.Count==0)Init();
+        if(ChildTetris.Count==0)Init();
         List<bool> buoyDrop = new();
         // 所有未占领的砖块恢复和平状态
-        foreach(var tetri in childTetris)
+        foreach(var tetri in ChildTetris)
         {
             if(!tetri.currentBlockTetriHandler){buoyDrop.Add(false);}
             if(tetri.currentBlockTetriHandler.State != BlockTetriHandler.BlockTetriState.Occupying)continue;
@@ -590,9 +622,16 @@ public class TetrisBlockSimple : NetworkBehaviour
         bool allTrue = buoyDrop.All(b => b);
         return allTrue;
     }
+    void CancleOccupied()
+    {
+        foreach(var tetri in ChildTetris)
+        {
+            tetri.CancleOccupied();
+        }
+    }
     public void Reset()
     {
-        foreach(var tetri in childTetris)
+        foreach(var tetri in ChildTetris)
         {
             tetri.Reset();
         }
@@ -610,7 +649,7 @@ public class TetrisBlockSimple : NetworkBehaviour
     {
         // if(!isClient)return;
         if(Local())return;
-        foreach(var tetri in childTetris)
+        foreach(var tetri in ChildTetris)
         {
             tetri.player = player;
             tetri.Display_playerColor();
@@ -633,7 +672,7 @@ public class TetrisBlockSimple : NetworkBehaviour
     {
         if(!isClient)return;
         if(Local())return;
-        foreach(var tetri in childTetris)
+        foreach(var tetri in ChildTetris)
         {
             tetri.Display_playerColor(isVisble);
         }
@@ -644,6 +683,32 @@ public class TetrisBlockSimple : NetworkBehaviour
         if(Local())return;
         transform.GetComponent<TetrisBuoySimple>().serverID = sID;
     }
+#endregion 数据操作
+#region 联网数据操作
+    public void Client_Rotate(Vector3 axis)
+    {
+        bool reverse = false;
+        OnRotate?.Invoke(reverse);
+        // transform.RotateAround(transform.TransformPoint(rotationPoint), axis, 90);
+        foreach (TetriBlockSimple child in ChildTetris)
+        {
+            if(!child)continue;
+            child.RotateForRecalculateDisplayRange(reverse);
+        }
+    }
+    public void Server_Rotate(Vector3 axis)
+    {
+        bool reverse = false;
+        OnRotate?.Invoke(reverse);
+        transform.RotateAround(transform.TransformPoint(rotationPoint), axis, 90);
+        // Debug.Log($"rotateTimes:{ChildTetris.Count}");
+        foreach (TetriBlockSimple child in ChildTetris)
+        {
+            if(!child)continue;
+            child.RotateForRecalculateDisplayRange(reverse);
+        }
+    }
     
+#endregion 联网数据操作
 }
 

@@ -1,11 +1,8 @@
 ﻿using Common;
 using DG.Tweening;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class MainSceneControlManager : MonoBehaviour
 {
@@ -16,6 +13,8 @@ public class MainSceneControlManager : MonoBehaviour
 
     private void Start()
     {
+        broadcastClass = this.GetComponent<BroadcastClass>();
+
         // 加载固定加载场景
         LoadSceneAdditive(sceneToLoads);
     }
@@ -37,6 +36,32 @@ public class MainSceneControlManager : MonoBehaviour
                 Debug.Log("场景：" + sceneName + "不存在， 请检查 File -> BuildSettings -> Scenes in Build 中是否存在该场景" + e);
             }
         }
+    }
+
+    /// <summary>
+    /// 加载Ping Pong Test场景
+    /// </summary>
+    public void LoadPingPongScene() 
+    {
+        ABManager.Instance.UnLoadAll();
+
+        SceneManager.LoadScene("PingpongScene", LoadSceneMode.Additive);
+
+        Time.timeScale = 1.0f;
+    }
+
+    /// <summary>
+    /// 加载PVE场景
+    /// </summary>
+    public void LoadMainFightSceneMatching()
+    {
+        broadcastClass.Reload();
+
+        ABManager.Instance.UnLoadAll();
+
+        SceneManager.LoadScene("MainFightScene", LoadSceneMode.Additive);
+
+        Time.timeScale = 1.0f;
     }
 
 
@@ -93,6 +118,12 @@ public class MainSceneControlManager : MonoBehaviour
         SceneManager.LoadScene("MainFightScene");
 
         Time.timeScale = 1.0f;
+    }
+
+    public void ClearAllBroadCast()
+    {
+        broadcastClass.Reload();
+
     }
 
     void ClearAllDOTweenAnimations()

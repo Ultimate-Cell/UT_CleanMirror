@@ -32,6 +32,10 @@ Material:
     - _Amplitude: 1
     - _Cutoff: 0.1
     - _DoubleSidedLighting: 0
+    - _Foreshadow: 0
+    - _ForeshadowFrequency: 5
+    - _ForeshadowStrength: 0.3
+    - _ForeshadowWidth: 0.1
     - _LightAffectsAdditive: 0
     - _MaxPorcess: 4.69
     - _MinPorcess: -0.9
@@ -42,11 +46,15 @@ Material:
     - _OutlineWidth: 3
     - _Porcess: 0
     - _ReceiveShadows: 0
+    - _SelectOutlineWidth: 0.005
     - _StencilComp: 8
     - _StencilRef: 1
     - _StraightAlphaInput: 1
     - _ThresholdEnd: 0.25
     - _Use8Neighbourhood: 1
     m_Colors:
+    - _BeenAttackedColor: {r: 0, g: 0, b: 0, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 1, g: 1, b: 0, a: 1}
+    - _SelectOutlineColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using UC_PlayerData;
 using UnityEngine.SceneManagement;
 using DG.Tweening;
-public class BlocksReferee : MonoBehaviour
+using Mirror;
+public class BlocksReferee : NetworkBehaviour
 {
+#region 数据对象
     BlocksCreator_Main blocksCreator_Main;
     public BlocksCreator_Main BlocksCreator_Main
     {
@@ -21,32 +23,71 @@ public class BlocksReferee : MonoBehaviour
     {
         get
         {
-            if(!gameoverPage)gameoverPage = Resources.Load<RectTransform>("UI/VictoryPage");
+            if(!gameoverPage)gameoverPage = Resources.Load<RectTransform>("UI/FinishPage");
             return gameoverPage;
         }
+    }
+   
+#endregion 数据对象
+#region 联网数据对象
+    RectTransform victoryPage;
+    public RectTransform VictoryPage
+    {
+        get
+        {
+            if(!victoryPage)victoryPage = Resources.Load<RectTransform>("UI/VictoryPage");
+            return victoryPage;
+        }
+    }
+    RectTransform defeatedPage;
+    public RectTransform DefeatedPage
+    {
+        get
+        {
+            if(!defeatedPage)defeatedPage = Resources.Load<RectTransform>("UI/DefeatedPage");
+            return defeatedPage;
+        }
+    }
+    RectTransform equivalentPage;
+    public RectTransform EquivalentPage
+    {
+        get
+        {
+            if(!equivalentPage)equivalentPage = Resources.Load<RectTransform>("UI/EquivalentPage");
+            return equivalentPage;
+        }
+    }
+#endregion 联网数据对象
+#region 数据关系
+    public void Awake()
+    {
+        DOTween.Clear();
     }
     public void Active()
     {
         ResetTimer();
     }
-    // 计时器胜负判定
     private void Update()
     {
-        if(!Referee.isTimerRunning)return;
-        UpdateTimerString(); // 更新UI上的计时器显示
-        Referee.currentTime -= Time.deltaTime; // 更新当前计时时间
-        if (Referee.currentTime > 0) return;
+        if(!Referee.isTimerRunning_ReverseOrder)return;
+        UpdateStaticTimerString();
+        Referee.currentTime_ReverseOrder -= Time.deltaTime;
+        if (Referee.currentTime_ReverseOrder > 0) return;
         TimerComplete();
     }
+#endregion 数据关系
+#region 数据操作
     public void StopTimer()
     {
-        Referee.isTimerRunning = false; // 停止计时
+        bool stopCounting = false;
+        Referee.isTimerRunning_ReverseOrder = stopCounting;
     }
     public void ResetTimer()
     {
-        Referee.currentTime = Referee.totalTime; // 重置当前计时时间
-        Referee.isTimerRunning = true; // 开始计时
-        Referee.gameover = false; // 游戏未结束
+        bool startCounting = true;
+        Referee.currentTime_ReverseOrder = Referee.TotalTime_ReverseOrder;
+        Referee.isTimerRunning_ReverseOrder = startCounting;
+        Referee.gameover = false;
     }
     void TimerComplete()
     {
@@ -69,9 +110,20 @@ public class BlocksReferee : MonoBehaviour
     }
     void GameOver()
     {
-        if(Referee.gameover)return;
-        Referee.gameover = true;
-        gameoverPage = Instantiate(GameoverPage);
+        if(Local())
+        {
+            if(Referee.gameover)return;
+            Referee.gameover = true;
+            gameoverPage = Instantiate(GameoverPage);
+        }else
+        {
+            if(!isServer)return;
+            if(Referee.gameover)return;
+            Referee.gameover = true;
+            gameoverPage = Instantiate(GameoverPage);
+            Client_GameOver(BlocksData.Player1_numb,BlocksData.Player2_numb);
+        }
+        
     }
     public void Restart()
     {
@@ -79,15 +131,14 @@ public class BlocksReferee : MonoBehaviour
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
         SceneManager.LoadScene(currentSceneIndex);
     }
-    private void UpdateTimerString()
+    private void UpdateStaticTimerString()
     {
-        // 将当前计时时间转换为分秒格式，并显示在UI上
-        int minutes = Mathf.FloorToInt(Referee.currentTime / 60f);
-        int seconds = Mathf.FloorToInt(Referee.currentTime % 60f);
-        Referee.timerText = string.Format("{0:00}:{1:00}", minutes, seconds);
+        int minutes = Mathf.FloorToInt(Referee.currentTime_ReverseOrder / 60f);
+        int seconds = Mathf.FloorToInt(Referee.currentTime_ReverseOrder % 60f);
+        Referee.timerText_ReverseOrder = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
     // 砖块数胜负判定
-    public void CheckLose(Vector2 posId = default(Vector2), int state = 0)
+    public void CheckLoseByBloksLess(Vector2 posId = default(Vector2), int state = 0)
     {
         BlockTetriHandler.BlockTetriState blockTetriState = (BlockTetriHandler.BlockTetriState)state;
         if(blockTetriState == BlockTetriHandler.BlockTetriState.Occupying || blockTetriState == BlockTetriHandler.BlockTetriState.Peace_Player1 || blockTetriState == BlockTetriHandler.BlockTetriState.Peace_Player2 || blockTetriState == BlockTetriHandler.BlockTetriState.Peace)return;
@@ -97,4 +148,35 @@ public class BlocksReferee : MonoBehaviour
         StopTimer();
         GameOver();
     }
+#endregion 数据操作
+#region 联网数据操作
+    bool Local()
+    {
+        if(RunModeData.CurrentRunMode == RunMode.Local)return true;
+        return false;
+    }
+    [ClientRpc]
+    void Client_GameOver(int Player1_numb,int Player2_numb)
+    {
+        Player localPlayer = ServerLogic.local_palayer;
+        if(Player1_numb == Player2_numb)
+        {
+            equivalentPage = Instantiate(EquivalentPage);
+            return;
+        }
+        else if(localPlayer == Player.Player1 && Player1_numb > Player2_numb)
+        {
+            victoryPage = Instantiate(VictoryPage);
+        }
+        else if(localPlayer == Player.Player2 && Player1_numb < Player2_numb)
+        {
+            victoryPage = Instantiate(VictoryPage);
+        }
+        else
+        {
+            defeatedPage = Instantiate(DefeatedPage);
+        }
+    }
+
+#endregion 联网数据操作
 }
