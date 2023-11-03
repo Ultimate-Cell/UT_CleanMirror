@@ -98,7 +98,7 @@ public class MainPageUIManager : MonoBehaviour
     /// </summary>
     void StartMatching()
     {
-        GameObject.Find("NetWorkMatchingBehaviour").GetComponent<NetWorkMatchingBehaviour>().OnJoinServer(host.localhost);
+        GameObject.Find("NetWorkMatchingBehaviour").GetComponent<NetWorkMatchingBehaviour>().OnJoinServer();
     }
 
     /// <summary>

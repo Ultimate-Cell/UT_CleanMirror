@@ -34,9 +34,9 @@ public class NetWorkMatchingBehaviour : MonoBehaviour
     /// 开始连接服务器
     /// </summary>
     /// <param name="info"></param>
-    public void OnJoinServer(string NetWorkAddress)
+    public void OnJoinServer()
     {
-        manager.networkAddress = "192.168.1.35";
+        manager.networkAddress = NetWorkAddress;
 
         Debug.Log("Start jion the Server: " + manager.networkAddress);
 

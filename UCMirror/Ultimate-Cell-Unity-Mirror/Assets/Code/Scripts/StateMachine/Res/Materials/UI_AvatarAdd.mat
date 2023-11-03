@@ -123,7 +123,7 @@ Material:
     - _BlendDst: 1
     - _BlendOp: 0
     - _BlendSrc: 5
-    - _Brightness: 5
+    - _Brightness: 1
     - _BumpScale: 1
     - _CameraFadingEnabled: 0
     - _CameraFarFadeDistance: 2
