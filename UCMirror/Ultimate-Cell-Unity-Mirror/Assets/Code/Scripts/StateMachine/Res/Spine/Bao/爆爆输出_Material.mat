@@ -62,10 +62,6 @@ Material:
     - _Cutoff: 0.1
     - _DstBlend: 10
     - _EmissionPower: 2
-    - _Foreshadow: 0
-    - _ForeshadowFrequency: 5
-    - _ForeshadowStrength: 0.3
-    - _ForeshadowWidth: 0.1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _Hue: 0
@@ -82,7 +78,6 @@ Material:
     - _RenderQueue: 0
     - _RimPower: 2
     - _Saturation: 1
-    - _SelectOutlineWidth: 0.005
     - _ShadowAlphaCutoff: 0.1
     - _SrcBlend: 1
     - _StencilComp: 8
@@ -92,12 +87,10 @@ Material:
     - _Use8Neighbourhood: 1
     - _ZWrite: 0
     m_Colors:
-    - _BeenAttackedColor: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _FixedNormal: {r: 0, g: 0, b: 1, a: 1}
     - _OutlineColor: {r: 1, g: 1, b: 0, a: 1}
     - _OverlayColor: {r: 0, g: 0, b: 0, a: 0}
     - _RimColor: {r: 1, g: 1, b: 1, a: 1}
-    - _SelectOutlineColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
