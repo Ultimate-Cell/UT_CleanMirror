@@ -6,7 +6,6 @@ using DG.Tweening;
 
 public class ArtBackGround_PromptPlacement : MonoBehaviour
 {
-    
     MeshRenderer meshRenderer;
     private Material material;
     private float originalAlpha;
