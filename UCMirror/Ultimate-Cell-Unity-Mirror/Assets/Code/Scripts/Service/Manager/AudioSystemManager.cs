@@ -75,13 +75,15 @@ public class AudioSystemManager : MonoBehaviour
         else
         {
             //加载资源
-            AudioClip clip = ABManager.Instance.LoadResource<AudioClip>("audio", name);
+            // AudioClip clip = ABManager.Instance.LoadResource<AudioClip>("audio", name);
+            AudioClip clip = Resources.Load<AudioClip>(name);
                 // Resources.Load<AudioClip>(PATH + fname + ".wav");
             if (clip == null)
                 return;
             if (musicSource.isPlaying)
                 musicSource.Stop();
             musicSource.clip = clip;
+            musicSource.volume *= 0.5f;
             nowName = name;
             musicSource.Play();
 
@@ -90,15 +92,69 @@ public class AudioSystemManager : MonoBehaviour
         // 开启协程,并将循环次数 - 1
         coroutine = StartCoroutine(MusicLoop(name, loopTime - 1, action));
     }
+    public void PlayMusicSimple(string path,float volume)
+    {
+        AudioClip clip = Resources.Load<AudioClip>(path);
+        if (clip == null)return;
+        if(musicSource.isPlaying)return;
+        musicSource.clip = clip;
+        musicSource.volume *= volume;
+        musicSource.Play();
+        musicSource.loop = true;
 
+    }
     /// <summary>
     /// 播放音效
     /// </summary>
     public void PlaySound(string name)
     {
-        AudioClip clip = ABManager.Instance.LoadResource<AudioClip>("audio", name);
-
+        // AudioClip clip = ABManager.Instance.LoadResource<AudioClip>("audio", name);
+        AudioClip clip = Resources.Load<AudioClip>(name);
         soundSource.PlayOneShot(clip);
+    }
+    public void PlaySoundSimple(string name,float volume = 1,float delay = 0)
+    {
+        // AudioClip clip = ABManager.Instance.LoadResource<AudioClip>("audio", name);
+        AudioClip clip = Resources.Load<AudioClip>(name);
+        soundSource.volume *= volume;
+        if(delay == 0)
+        {
+            soundSource.PlayOneShot(clip);
+        }else
+        {
+            soundSource.clip = clip;
+            soundSource.PlayDelayed(delay);
+        }
+    }
+    public void PlaySoundSimpleTemp(string name,float volume = 1,float delay = 0)
+    {
+        AudioClip clip = Resources.Load<AudioClip>(name);
+        AudioSource soundSourceTemp = new GameObject("soundSourceTemp").AddComponent<AudioSource>();
+        float destoryTime = clip.length;
+        soundSourceTemp.transform.SetParent(audioSys.transform);
+        soundSourceTemp.playOnAwake = false;
+        soundSourceTemp.loop = false;
+        soundSourceTemp.clip = clip;
+        soundSourceTemp.volume *= volume;
+        if(delay == 0)
+        {
+            if(clip.length > 3)
+            {
+                destoryTime = 3;
+                float randomStartTime = UnityEngine.Random.Range(0, clip.length-3);
+                soundSourceTemp.time = randomStartTime;
+                soundSourceTemp.Play();
+            }else
+            {
+                soundSourceTemp.PlayOneShot(clip);
+            }
+            
+        }else
+        {
+            soundSourceTemp.PlayDelayed(delay);
+        }
+       
+        Destroy(soundSourceTemp.gameObject,destoryTime + delay + 1f);
     }
 
     IEnumerator MusicLoop(string path, int loopTime, Action action = null)
