@@ -581,7 +581,7 @@ MonoBehaviour:
   message: {fileID: 890338608}
   NetWorkAddress: localhost
   LoadingPage: {fileID: 35014707}
-  connInfo: 0
+  connInfo: 1
 --- !u!1 &890338606
 GameObject:
   m_ObjectHideFlags: 0

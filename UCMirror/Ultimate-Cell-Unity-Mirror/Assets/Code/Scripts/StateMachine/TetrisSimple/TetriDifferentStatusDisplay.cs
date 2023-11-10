@@ -108,18 +108,17 @@ public class TetriDifferentStatusDisplay : NetworkBehaviour
 #region 数据关系
     void Start()
     {
-        if(TetriUnitSimple.TetriBlock.Player == Player.Player1)
+        if(Local())
         {
-            UserAction.OnPlayer1UserActionStateChanged += Event_OnUserActionStateChanged;
-            player1ActionBox = Resources.Load<Sprite>("Foreshadow/BrightRed");
-        }
-        else
+            Local_Event_Register();
+        }else
         {
-            UserAction.OnPlayer2UserActionStateChanged += Event_OnUserActionStateChanged;
-            player2ActionBox = Resources.Load<Sprite>("Foreshadow/LakeBlue");
+            // if(!isServer)return;
+            Local_Event_Register();
+            // Server_Event_Register();
         }
-        float waitLoading = 0.1f;
-        Invoke(nameof(Init),waitLoading);
+        
+        
     }
     void OnDisable()
     {
@@ -132,6 +131,22 @@ public class TetriDifferentStatusDisplay : NetworkBehaviour
     }
 #endregion 数据关系
 #region 数据操作
+    void Local_Event_Register()
+    {
+
+        if(TetriUnitSimple.TetriBlock.Player == Player.Player1)
+        {
+            UserAction.OnPlayer1UserActionStateChanged += Event_OnUserActionStateChanged;
+            player1ActionBox = Resources.Load<Sprite>("Foreshadow/BrightRed");
+        }
+        else if(TetriUnitSimple.TetriBlock.Player == Player.Player2)
+        {
+            UserAction.OnPlayer2UserActionStateChanged += Event_OnUserActionStateChanged;
+            player2ActionBox = Resources.Load<Sprite>("Foreshadow/LakeBlue");
+        }
+        float waitLoading = 0.1f;
+        Invoke(nameof(Init),waitLoading);
+    }
     void Init()
     {
         TryGetComponent<TetriUnitSimple>(out tetriUnitSimple);

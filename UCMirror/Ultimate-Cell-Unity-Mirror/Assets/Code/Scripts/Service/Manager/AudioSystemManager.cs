@@ -126,6 +126,21 @@ public class AudioSystemManager : MonoBehaviour
             soundSource.PlayDelayed(delay);
         }
     }
+    public void PlaySoundSimpleScaleTemp(string name ,float seconds,float volume = 1)
+    {
+        AudioClip clip = Resources.Load<AudioClip>(name);
+        AudioSource soundSourceTemp = new GameObject("soundSourceTempScaled").AddComponent<AudioSource>();
+        float destoryTime = clip.length;
+        soundSourceTemp.clip = clip;
+        float currentDuration = soundSourceTemp.clip.length;
+        float scaleFactorTemp = currentDuration/seconds;
+        soundSourceTemp.pitch = scaleFactorTemp;
+        soundSourceTemp.time = 0f;
+        soundSourceTemp.volume *= volume;
+        soundSourceTemp.Play();
+
+        Destroy(soundSourceTemp.gameObject,seconds + 1f);
+    }
     public void PlaySoundSimpleTemp(string name,float volume = 1,float delay = 0)
     {
         AudioClip clip = Resources.Load<AudioClip>(name);
@@ -151,7 +166,16 @@ public class AudioSystemManager : MonoBehaviour
             
         }else
         {
-            soundSourceTemp.PlayDelayed(delay);
+            if(clip.length > 3)
+            {
+                destoryTime = 3;
+                float randomStartTime = UnityEngine.Random.Range(0, clip.length-3);
+                soundSourceTemp.time = randomStartTime;
+                soundSourceTemp.PlayDelayed(delay);
+            }else
+            {
+                soundSourceTemp.PlayDelayed(delay);
+            }
         }
        
         Destroy(soundSourceTemp.gameObject,destoryTime + delay + 1f);
