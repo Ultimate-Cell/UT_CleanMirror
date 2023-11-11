@@ -578,10 +578,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   manager: {fileID: 1958149172}
+  image: {fileID: 0}
   message: {fileID: 890338608}
   NetWorkAddress: localhost
   LoadingPage: {fileID: 35014707}
-  connInfo: 1
+  connInfo: 0
 --- !u!1 &890338606
 GameObject:
   m_ObjectHideFlags: 0
@@ -814,6 +815,8 @@ MonoBehaviour:
     scenePath: Assets/Level/Scenes/FightScene/Idea.unity
   - sceneAsset: {fileID: 102900000, guid: b721dd67f5747ad479bc8641de58c8ac, type: 3}
     scenePath: Assets/Level/Scenes/FightScene/ArtBackGroundScene.unity
+  ReloadMainFightScene: 0
+  ReloadMainBaseScene: 0
 --- !u!1 &1958149169
 GameObject:
   m_ObjectHideFlags: 0

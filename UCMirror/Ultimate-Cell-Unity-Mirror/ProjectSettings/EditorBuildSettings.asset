@@ -12,11 +12,11 @@ EditorBuildSettings:
     path: Assets/Level/Scenes/MianLoginScene.unity
     guid: d772bb853ca5001409f1a84a87502a39
   - enabled: 1
-    path: Assets/Level/Scenes/MainFightScene.unity
-    guid: 71a15b8407c82dd4eb4a99b6ce4b81fc
-  - enabled: 1
     path: Assets/Level/Scenes/MainBasicScene.unity
     guid: 95a4105985889684dbab5895706fed58
+  - enabled: 1
+    path: Assets/Level/Scenes/MainFightScene.unity
+    guid: 71a15b8407c82dd4eb4a99b6ce4b81fc
   - enabled: 1
     path: Assets/Mirror/Examples/Pong/Scenes/Scene.unity
     guid: 89a84548859e3b643b4fb27984dc2b0d

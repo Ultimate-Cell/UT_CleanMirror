@@ -175,7 +175,8 @@ public class IdelBox : NetworkBehaviour,
             {
                 UserAction.OnPlayer1UserActionStateChanged += Event_OnUserActionStateChanged;
                 UserAction.Player1UserState = UserAction.State.Loading;
-            }else if(idelHolder.playerPVP_local == Player.Player2)
+            }
+            if(idelHolder.playerPVP_local == Player.Player2)
             {
                 UserAction.OnPlayer2UserActionStateChanged += Event_OnUserActionStateChanged;
                 UserAction.Player2UserState = UserAction.State.Loading;
@@ -700,12 +701,14 @@ public class IdelBox : NetworkBehaviour,
     void Cmd_OnBeginDrag()
     {
         if(!tetrominoe)return;
+        OnTheCheckerboard?.Invoke();
         tetrominoe.GetComponent<TetrisUnitSimple>().OnBeginDragDisplay();
         ResetAnimation();
         // PlayAnimation_OpenUp();
         OnBoardChecker();
         if(inRotationEditMode)return;
         InFlow();
+        
         // Client_InFlow(tetrominoe.netId,player);
     }
     [Server]
