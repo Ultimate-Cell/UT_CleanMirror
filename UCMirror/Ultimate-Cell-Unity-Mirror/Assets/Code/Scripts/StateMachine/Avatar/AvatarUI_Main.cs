@@ -281,12 +281,16 @@ public class AvatarUI_Main : NetworkBehaviour
             player2AvatarSet = transform.Find("UI_Panel_Player2");
             if(!player2AvatarSet)return;
             player2AvatarSet.gameObject.SetActive(false);
+
+            ServerLogic.On_Local_palayer_ready -= HideOtherUI;
         }
         else if(ServerLogic.Local_palayer == Player.Player2)
         {
             player1AvatarSet = transform.Find("UI_Panel_Player1");
             if(!player1AvatarSet)return;
             player1AvatarSet.gameObject.SetActive(false);
+
+            ServerLogic.On_Local_palayer_ready -= HideOtherUI;
         }
     }
     [ClientRpc]
