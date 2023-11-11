@@ -2,10 +2,8 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using UnityEngine.TextCore.Text;
 using Spine.Unity;
 using TMPro;
-using System.Linq;
 
 public class VictoryPage : MonoBehaviour
 {
@@ -27,8 +25,9 @@ public class VictoryPage : MonoBehaviour
     public float brightness = 5f;
 
     [Header("Canvas")]
-    public Canvas canvas;
+    public Canvas canvaspage;
 
+    [Header("Other")]
     public GameObject Character;
 
     private Vector3 CharacterTarget;
@@ -51,11 +50,16 @@ public class VictoryPage : MonoBehaviour
 
     private void Start()
     {
-        BackBtn.onClick.AddListener(() => { BackMainPage(); });
+        BackBtn.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("BUtton_Click_two");
 
-        Character.transform.DOLocalMoveX(-1400f, 0f);
+            BackMainPage(); 
+        });
 
-        VictoryTex.transform.DOLocalMoveX(-1400f, 0f);
+        Character.transform.DOLocalMoveX(-1600f, 0f);
+
+        VictoryTex.transform.DOLocalMoveX(-1600f, 0f);
 
         RankTex.transform.DOLocalMoveX(-1400f, 0f);
 
@@ -84,11 +88,15 @@ public class VictoryPage : MonoBehaviour
 
         //这里需要把UI设定为ScreenSpace
         Camera uiCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
-        canvas.renderMode = RenderMode.ScreenSpaceCamera;
-        canvas.worldCamera = uiCam;
-        //canvas.sortingOrder = 200;
-        canvas.planeDistance = 250;
-        canvas.sortingLayerName = "Flow";
+
+        canvaspage.renderMode = RenderMode.ScreenSpaceCamera;
+        canvaspage.worldCamera = uiCam;
+        canvaspage.sortingOrder = 200;
+        canvaspage.sortingLayerName = "Flow";
+
+        GameObject.Find("AvatarsUI(Clone)")?.gameObject.SetActive(false);
+
+        GameObject.Find("BlocksUI(Clone)")?.gameObject.SetActive(false);
 
         Invoke("PlayEffect", 1f);
     }
@@ -101,14 +109,18 @@ public class VictoryPage : MonoBehaviour
 
         image.fillAmount = 0;
 
+        AudioSystemManager.Instance.PlaySound("Page_Victory");
+
         image.DOFillAmount(1f, Speed).OnComplete( () =>
         {
             image.material = null;
 
             VictoryEffect.Play();
 
-            VictoryTex.transform.DOLocalMoveX(354f, 0.8f).OnComplete(() => 
+            VictoryTex.transform.DOLocalMoveX(200f, 0.3f).OnComplete(() =>
             {
+                VictoryTex.transform.DOLocalMoveX(354f, 0.5f).SetEase(Ease.OutBounce);
+
                 Vector3 targetScale = new Vector3(1.5f, 1.5f, 1.5f);
 
                 foreach (var obj in Stars)
@@ -153,6 +165,8 @@ public class VictoryPage : MonoBehaviour
         var sceneLoader = GameObject.Find("SceneLoader").gameObject.GetComponent<MainSceneControlManager>();
 
         // sceneLoader.ClearAllBroadCast();
+
+        GameObject.Find("NetworkManager").GetComponent<NetworkManagerUC_PVP>().StopClient();
 
         sceneLoader.LoadMainBasicScene();
     }

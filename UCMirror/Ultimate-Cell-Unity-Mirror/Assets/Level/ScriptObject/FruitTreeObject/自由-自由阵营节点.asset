@@ -19,6 +19,6 @@ MonoBehaviour:
   isCampFruit: 1
   CostPointsInfo: 5
   FruitCamp: 3
-  FruitIconTiggered: {fileID: 21300000, guid: f8b10e32b8b376f4ba5bd1577002f12c, type: 3}
-  FruitIconNotTiggered: {fileID: 21300000, guid: f8b10e32b8b376f4ba5bd1577002f12c,
+  FruitIconTiggered: {fileID: 21300000, guid: 918ef7de29cfcbb4e9efa530722cf46e, type: 3}
+  FruitIconNotTiggered: {fileID: 21300000, guid: 918ef7de29cfcbb4e9efa530722cf46e,
     type: 3}

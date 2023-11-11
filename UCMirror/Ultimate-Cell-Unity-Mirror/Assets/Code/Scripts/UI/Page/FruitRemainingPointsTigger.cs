@@ -19,10 +19,28 @@ public class FruitRemainingPointsTigger : MonoBehaviour
         ResetTiggerButton.onClick.AddListener(() => { MainRootTigger.SetLineTypeFalse(); });
     }
 
-    private void SetShowText(int points)
+    public void SetShowText(int points)
     {
         ShowText.text = points + "";
 
+    }
+
+    public bool SetShowTextCost(int Cost)
+    {
+        var residue = StartPoint - Cost;
+
+        if (residue < 0)
+        {
+            return false;
+        }
+        else
+        {
+            StartPoint = residue;
+
+            this.SetShowText(StartPoint);
+
+            return true;
+        }
     }
 
     public bool FruitUITiggerCheck(int Cost) 
@@ -36,8 +54,6 @@ public class FruitRemainingPointsTigger : MonoBehaviour
         else 
         {
             StartPoint = residue;
-
-            this.SetShowText(residue);
 
             return true;
         }

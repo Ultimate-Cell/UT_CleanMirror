@@ -1,17 +1,55 @@
 ﻿using Common;
+using DG.Tweening;
 using GameFrameWork;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using static UIManager;
+using Button = UnityEngine.UI.Button;
 
-public class MainPageUIManager : MonoBehaviour 
+public class MainPageUIManager : BaseUI
 {
-    [Header("屏幕遮罩")]
+    public override UIType GetUIType()
+    {
+        throw new System.NotImplementedException();
+    }
 
+    [Header("主页面")]
+    public GameObject Canvas;
+
+    public GameObject ScientistImage;
+
+    public GameObject CellsInfo_1;
+
+    public GameObject CellsInfo_2;
+
+    public GameObject ScenetistGameObjectInfo;
+
+    public GameObject Flask_Style;
+
+    [Header("屏幕遮罩")]
     // 屏幕遮罩
     public GameObject ScreenMask;
+
+    [Header("二级页面")]
+
+    // 用户信息页面
+    public GameObject UserInfoPage;
+
+    // 邮件页面
+    public GameObject MailInfoPage;
+
+    // 好友页面
+    public GameObject FriendsInfoPage;
+
+    // 设置界面Button
+    public GameObject SettingInfoPage;
+
+    // 聊天页面
+    public GameObject ChatInfoPage;
+
+    // 果实树页面
+    public GameObject FruitTreePage;
 
     [Header("主页面按钮")]
 
@@ -36,49 +74,146 @@ public class MainPageUIManager : MonoBehaviour
     // 果实树页面打开Button
     public Button FruitTreeButton;
 
-    [Header("二级页面")]
+    // 科学家果实树按钮
+    public Button ScinetistBUtton;
 
-    // 用户信息页面
-    public GameObject UserInfoPage;
+    // 细胞按钮
+    public Button CellsButton;
 
-    // 邮件页面
-    public GameObject MailInfoPage;
-
-    // 好友页面
-    public GameObject FriendsInfoPage;
-
-    // 设置界面Button
-    public GameObject SettingInfoPage;
-
-    // 聊天页面
-    public GameObject ChatInfoPage;
-
-    // 果实树页面
-    public GameObject FruitTreePage;
-
-    [Header("联网")]
+    [Header("联网 - 不设置")]
     public NetWorkMatchingBehaviour behaviour;
 
     public SettingsInfo host;
 
     private void Start()
     {
-        StartMatchingButton.onClick.AddListener(() => { StartMatching(); });
+        StartMatchingButton.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("Button_GameStart_Click");
 
-        UserInfoButton.onClick.AddListener(() => { DisplaySecondaryPage("UserInfoPage"); });
+            StartMatching(); 
+        });
 
-        MailInfoButton.onClick.AddListener(() => { DisplaySecondaryPage("MailInfoPage"); });
+        UserInfoButton.onClick.AddListener(() => 
+        {
+            AudioSystemManager.Instance.PlaySound("UI_Change"); 
 
-        FriendsInfoButton.onClick.AddListener(() => { DisplaySecondaryPage("FriendsInfoPage"); });
+            DisplaySecondaryPage("UserInfoPage"); 
+        });
 
-        SettingInfoButton.onClick.AddListener(() => { DisplaySecondaryPage("SettingInfo"); });
+        MailInfoButton.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("UI_Change");
 
-        ChatInfoButton.onClick.AddListener(() => { DisplaySecondaryPage("ChatInfo"); });
+            DisplaySecondaryPage("MailInfoPage"); 
+        });
 
-        FruitTreeButton.onClick.AddListener(() => { DisplaySecondaryPage("FruitPageInfo"); });
+        FriendsInfoButton.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("UI_Change");
+
+            DisplaySecondaryPage("FriendsInfoPage"); 
+        });
+
+        SettingInfoButton.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("UI_Change");
+
+            DisplaySecondaryPage("SettingInfo"); 
+        });
+
+        ChatInfoButton.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("UI_Change");
+
+            DisplaySecondaryPage("ChatInfo"); 
+        });
+
+        FruitTreeButton.onClick.AddListener(() =>
+        {
+            AudioSystemManager.Instance.PlaySound("UI_Change");
+
+            DisplaySecondaryPage("FruitPageInfo"); 
+        });
+
+        BtnEvent.RigisterButtonDownEvent(ScinetistBUtton.transform.gameObject, p => { this.OnScButtonDown(); });
+
+        BtnEvent.RigisterButtonUpEvent(ScinetistBUtton.transform.gameObject, p => { this.OnScButtonUp(); });
+
+        BtnEvent.RigisterButtonDownEvent(CellsButton.transform.gameObject, p => { this.OnCeButtonDown(); });
+
+        BtnEvent.RigisterButtonUpEvent(CellsButton.transform.gameObject, p => { this.OnCeButtonUp(); });
 
         // 二级页面事件注册
         this.LevelTwoPageAction();
+
+        this.MusicPlayer();
+
+        // 动效播放
+        // Invoke("PlayEffet", 1f);
+    }
+
+    private void MusicPlayer()
+    {
+        // Play Music
+        AudioSystemManager.Instance.PlaySound("Bubble_Music");
+
+        AudioSystemManager.Instance.PlayMusic("MianBackGround_Music", 99);
+    }
+
+    private Tween SceneTween;
+
+    private void PlayEffet() 
+    {
+        // 科学家上下移动
+        SceneTween = this.SetScenetistTween();
+    }
+
+    private Tween SetScenetistTween() 
+    {
+        return ScenetistGameObjectInfo.transform.DOMoveY(Mathf.PingPong(Time.deltaTime * 1f, 80f) - 40f + ScenetistGameObjectInfo.transform.position.y, 2f)
+            .SetEase(Ease.Linear)
+            .SetLoops(-1, LoopType.Yoyo);
+    }
+
+    /// <summary>
+    /// 科学家按钮压下
+    /// </summary>
+    private void OnScButtonDown()
+    {
+        AudioSystemManager.Instance.PlaySound("UI_Change");
+
+        ScientistImage.gameObject?.SetActive(true);
+    }
+
+    /// <summary>
+    /// 科学家按钮抬起
+    /// </summary>
+    private void OnScButtonUp()
+    {
+        AudioSystemManager.Instance.PlaySound("Button_Click_one");
+
+        ScientistImage.gameObject?.SetActive(false);
+
+        FruitTreePage.SetActive(true);
+    }
+
+    /// <summary>
+    /// 细胞按钮压下
+    /// </summary>
+    private void OnCeButtonDown()
+    {
+        CellsInfo_1.gameObject?.SetActive(true);
+
+        CellsInfo_2.gameObject?.SetActive(true);
+    }
+
+    /// <summary>
+    /// 细胞按钮抬起
+    /// </summary>
+    private void OnCeButtonUp()
+    {
+
     }
 
     /// <summary>
@@ -164,4 +299,5 @@ public class MainPageUIManager : MonoBehaviour
     {
         ScreenMask.SetActive(false);
     }
+
 }

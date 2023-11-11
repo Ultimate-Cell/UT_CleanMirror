@@ -35,6 +35,9 @@ public class LoginMainSceneManager : MonoBehaviour
 
         Invoke(nameof(StopMask), 2f);
 
+        AudioSystemManager.Instance.PlayMusic("FearsLeftHandMan", 99);
+
+        AudioSystemManager.Instance.PlaySound("Bubble_Music");
     }
     #endregion
 
@@ -62,6 +65,8 @@ public class LoginMainSceneManager : MonoBehaviour
     void LoginButtonClick()
     {
         SceneLoad.LoadMainBasicScene();
+
+        AudioSystemManager.Instance.PlaySound("Button_Click_one");
     }
 
     /// <summary>
@@ -70,6 +75,8 @@ public class LoginMainSceneManager : MonoBehaviour
     void CreateButtonClick()
     {
         SceneLoad.LoadMainBasicScene();
+
+        AudioSystemManager.Instance.PlaySound("BUtton_Click_two");
     }
     #endregion
 }

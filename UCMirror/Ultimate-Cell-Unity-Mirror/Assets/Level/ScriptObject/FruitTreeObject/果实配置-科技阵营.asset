@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: "\u79D1\u6280\u4E3B\u4E49\u9635\u8425\u679C\u5B9E\u914D\u7F6E"
   FrutitCampId: 70000
   FruitSelectCamp: 0
-  NecessaryCampFruit: {fileID: 11400000, guid: 8cac71cc6111f494699d7caf7f38502e, type: 2}
-  FreelyCampFruit1: {fileID: 11400000, guid: 62c04584e20ae4d47a36a35ab916cf43, type: 2}
-  FreelyCampFruit2: {fileID: 11400000, guid: 62c04584e20ae4d47a36a35ab916cf43, type: 2}
-  FreelyCampFruit3: {fileID: 11400000, guid: 62c04584e20ae4d47a36a35ab916cf43, type: 2}
+  NecessaryCampFruit: {fileID: 0}
+  FreelyCampFruit1: {fileID: 0}
+  FreelyCampFruit2: {fileID: 0}
+  FreelyCampFruit3: {fileID: 0}

@@ -1,10 +1,16 @@
 ﻿using Mirror;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup;
+using System.Net;
+using System.Net.Sockets;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class NetWorkMatchingBehaviour : MonoBehaviour
 {
     public NetworkManager manager;
+
+    public Image image;
 
     public MessageBehavior message;
 
@@ -22,6 +28,11 @@ public class NetWorkMatchingBehaviour : MonoBehaviour
 
     private void Start()
     {
+        if (connInfo == ConnType.Client)
+        {
+            NetWorkAddress = GameObject.Find("PhoneSettings").GetComponent<LocalSettingManager>().settingInfo;
+        }
+
         if (connInfo == ConnType.Server)
         {
             LoadingPage.SetActive(false);

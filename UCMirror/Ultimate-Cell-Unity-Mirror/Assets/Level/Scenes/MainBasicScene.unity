@@ -186,6 +186,8 @@ MonoBehaviour:
     scenePath: Assets/Level/Scenes/BasicScene/ArtBackGroundScene.unity
   - sceneAsset: {fileID: 102900000, guid: 71a15b8407c82dd4eb4a99b6ce4b81fc, type: 3}
     scenePath: Assets/Level/Scenes/MainFightScene.unity
+  ReloadMainFightScene: 0
+  ReloadMainBaseScene: 0
 --- !u!114 &1205101383
 MonoBehaviour:
   m_ObjectHideFlags: 0

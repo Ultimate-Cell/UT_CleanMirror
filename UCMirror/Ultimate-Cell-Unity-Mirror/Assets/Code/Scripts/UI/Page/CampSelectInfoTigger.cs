@@ -13,6 +13,5 @@ public class CampSelectInfoTigger : MonoBehaviour
 
     private void Start()
     {
-        onChangeTiggerStyle.SetActive(false);
     }
 }

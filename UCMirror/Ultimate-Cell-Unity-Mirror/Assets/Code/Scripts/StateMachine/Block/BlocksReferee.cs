@@ -30,12 +30,12 @@ public class BlocksReferee : NetworkBehaviour
    
 #endregion 数据对象
 #region 联网数据对象
-    RectTransform victoryPage;
-    public RectTransform VictoryPage
+    GameObject victoryPage;
+    public GameObject VictoryPage
     {
         get
         {
-            if(!victoryPage)victoryPage = Resources.Load<RectTransform>("UI/VictoryPage");
+            if(!victoryPage)victoryPage = Resources.Load<GameObject>("UI/VictoryPage");
             return victoryPage;
         }
     }
@@ -44,7 +44,7 @@ public class BlocksReferee : NetworkBehaviour
     {
         get
         {
-            if(!defeatedPage)defeatedPage = Resources.Load<RectTransform>("UI/DefeatedPage");
+            if(!defeatedPage)defeatedPage = Resources.Load<RectTransform>("UI/FailPage");
             return defeatedPage;
         }
     }
@@ -53,7 +53,7 @@ public class BlocksReferee : NetworkBehaviour
     {
         get
         {
-            if(!equivalentPage)equivalentPage = Resources.Load<RectTransform>("UI/EquivalentPage");
+            if(!equivalentPage)equivalentPage = Resources.Load<RectTransform>("UI/VictoryPage");
             return equivalentPage;
         }
     }

@@ -11,12 +11,29 @@ public class MainSceneControlManager : MonoBehaviour
 
     private BroadcastClass broadcastClass;
 
+    public bool ReloadMainFightScene = false;
+
+    public bool ReloadMainBaseScene = false;
+
     private void Start()
     {
         broadcastClass = this.GetComponent<BroadcastClass>();
 
         // 加载固定加载场景
         LoadSceneAdditive(sceneToLoads);
+    }
+
+    private void Update()
+    {
+        if (ReloadMainFightScene) 
+        {
+            this.LoadMainFightScene();
+        }
+
+        if (ReloadMainBaseScene) 
+        {
+            this.LoadMainBasicScene();
+        }
     }
 
     /// <summary>
@@ -70,8 +87,6 @@ public class MainSceneControlManager : MonoBehaviour
     /// </summary>
     public void LoadMainFightScene()
     {
-        broadcastClass.Reload();
-
         ABManager.Instance.UnLoadAll();
 
         SceneManager.LoadScene("MainFightScene");

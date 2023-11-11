@@ -4,10 +4,13 @@ using UnityEngine.UI;
 using DG.Tweening;
 using static TreeFruitPageManager;
 using static EventType;
+using GameFrameWork;
 
-public class FruitTreeUITigger : MonoBehaviour 
+public class FruitTreeUITigger : BaseUI 
 {
     public List<GameObject> ToObject = new List<GameObject>();
+
+    public List<GameObject> FromObjects = new List<GameObject>();
 
     public bool isRootFruit;
 
@@ -37,10 +40,6 @@ public class FruitTreeUITigger : MonoBehaviour
 
     public GameObject UITypeFalse;
 
-    public Button TiggerButton;
-
-    public Button ForgetButton;
-
     public Button SelectButton;
 
     public FruitRemainingPointsTigger remainingPoints;
@@ -52,28 +51,70 @@ public class FruitTreeUITigger : MonoBehaviour
     {
     }
 
+    private float currentFillAmount = 0f;
+
+    private bool onPicShow = false;
+
+    public bool onPicHide = false;
+
     void Start()
     {
+        var button = this.gameObject.GetComponent<Button>();
 
-        if (!isTigger && !isRootFruit && !isCampFruit)
+        button.targetGraphic = UITypeTrue.GetComponent<Image>();
+
+        BtnEvent.RigisterButtonDownEvent(button.transform.gameObject, p => 
         {
-            this.gameObject.SetActive(false);
+            onPicShow = true;
+            onPicHide = false;
+        });
+
+        BtnEvent.RigisterButtonUpEvent(button.transform.gameObject, p =>
+        {
+            onPicHide = true;
+            onPicShow = false;
+        });
+
+        this.AfterStart();
+    }
+
+    private void Update()
+    {
+        if (onPicShow)
+        {
+            if (currentFillAmount < 1f)
+            {
+                currentFillAmount += 0.5f * Time.deltaTime;
+
+                UITypeTrue.GetComponent<Image>().fillAmount = currentFillAmount;
+
+                foreach (GameObject obj in FromObjects)
+                {
+                    obj.GetComponent<FruitTreeLineRender>().Line_True.GetComponent<Image>().fillAmount = currentFillAmount; ;
+                }
+            }
         }
+        if (onPicHide)
+        {
+            if (currentFillAmount < 1f)
+            {
+                currentFillAmount -= 0.5f * Time.deltaTime;
 
-        TiggerButton.gameObject.SetActive(false);
+                UITypeTrue.GetComponent<Image>().fillAmount = currentFillAmount;
 
-        ForgetButton.gameObject.SetActive(false);
-
-        if (isRootFruit) this.SetFruitTypeReady();
-
-        Invoke(nameof(AfterStart), 0.1f);
+                foreach (GameObject obj in FromObjects)
+                {
+                    obj.GetComponent<FruitTreeLineRender>().Line_True.GetComponent<Image>().fillAmount = currentFillAmount; ;
+                }
+            }
+        }
     }
 
     void AfterStart()
     {
         this.ReadFruitInfo();
 
-        this.SetFruitStyle();
+        // this.SetFruitStyle();
 
     }
 
@@ -101,10 +142,15 @@ public class FruitTreeUITigger : MonoBehaviour
 
             isTigger = true;
         }
+        else
+        {
+            foreach (GameObject obj in ToObject)
+            {
+                obj.SetActive(true);
 
-        TiggerButton.gameObject.SetActive(true);
-
-        ForgetButton.gameObject.SetActive(true);
+                obj.GetComponent<FruitTreeLineRender>().SetToUIObjectsFalse();
+            }
+        }
     }
 
     /// <summary>
@@ -180,14 +226,6 @@ public class FruitTreeUITigger : MonoBehaviour
     {
         this.gameObject.SetActive(true);
 
-        TiggerButton.gameObject.SetActive(true);
-
-        ForgetButton.gameObject.SetActive(true);
-
-        TiggerButton.onClick.AddListener(() => { SetLineTypeTrue(); });
-
-        ForgetButton.onClick.AddListener(() => { SetLineTypeFalse(); });
-
         SelectButton.onClick.AddListener(() => { SetSelectUIChange(); });
     }
 
@@ -223,14 +261,6 @@ public class FruitTreeUITigger : MonoBehaviour
     {
         if (!isRootFruit && !isCampFruit)
         {
-            TiggerButton.gameObject.SetActive(false);
-
-            ForgetButton.gameObject.SetActive(false);
-
-            TiggerButton.onClick.RemoveAllListeners();
-
-            ForgetButton.onClick.RemoveAllListeners();
-
             this.gameObject.SetActive(false);
             
         }
@@ -251,5 +281,10 @@ public class FruitTreeUITigger : MonoBehaviour
         }
 
         GameObject.FindObjectOfType<CampSelectManager>().ChangeImage(fruitInfo);
+    }
+
+    public override UIType GetUIType()
+    {
+        return UIType.None;
     }
 }

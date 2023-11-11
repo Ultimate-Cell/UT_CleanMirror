@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using DG.Tweening;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class FruitTreeLineRender : MonoBehaviour 
 {
@@ -9,9 +11,29 @@ public class FruitTreeLineRender : MonoBehaviour
 
     public GameObject Line_False;
 
+    private bool shakeOnce = false;
+
     private void Start()
     {
-        this.gameObject.SetActive(false);
+    }
+
+    private void Update()
+    {
+        var fill = Line_True.GetComponent<Image>().fillAmount;
+
+        if (!(fill < 1) && !shakeOnce)
+        {
+            foreach (GameObject go in ToUIObjects)
+            {
+                go.transform.DOShakePosition(0.5f, 10f, 10);
+
+                var gocom = go.GetComponent<FruitTreeUITigger>();
+
+                gocom.remainingPoints.SetShowTextCost(gocom.CostPointsInfo);
+
+                shakeOnce = true;
+            }
+        }
     }
 
     /// <summary>

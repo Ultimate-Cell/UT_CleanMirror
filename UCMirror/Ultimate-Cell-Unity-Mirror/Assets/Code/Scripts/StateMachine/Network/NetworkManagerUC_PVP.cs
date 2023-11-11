@@ -21,6 +21,8 @@ public class NetworkManagerUC_PVP : NetworkManager
     public BuoyInfo buoyPlayer;
     public IdelHolder idelHolderP1;
     public IdelHolder idelHolderP2;
+
+    private List<NetworkConnectionToClient> conns= new List<NetworkConnectionToClient>();
     #endregion 联网数据对象
     #region 联网数据关系
     public override void Awake()
@@ -74,6 +76,9 @@ public class NetworkManagerUC_PVP : NetworkManager
         Transform start = numPlayers == 0 ? buoyPlayer1Spawn : buoyPlayer2Spawn;
         GameObject playerObject = Instantiate(playerPrefab, start.position, start.rotation);
         NetworkServer.AddPlayerForConnection(conn, playerObject);
+
+        conns.Add(conn);
+
         playerObject.TryGetComponent(out buoyPlayer);
 
         if (numPlayers == 1)
@@ -104,17 +109,26 @@ public class NetworkManagerUC_PVP : NetworkManager
         }
         Debug.Log("OnServerAddPlayer" + numPlayers);
     }
+
     public override void OnServerDisconnect(NetworkConnectionToClient conn)
     {
-        Debug.Log("玩家掉线");
+        Debug.Log("玩家掉线 - 游戏结束");
+
         // call base functionality (actually destroys the player)
         base.OnServerDisconnect(conn);
 
-
-        // 重新启动服务器
+        // 关闭服务器
         StopServer();
-        // StartServer();
+
+        Invoke("ReloadGame", 1f);
     }
+
+    private void ReloadGame()
+    {
+        // 重启服务器
+        GameObject.Find("SceneLoader").GetComponent<MainSceneControlManager>().LoadMainFightScene();
+    }
+
     #endregion 联网数据关系
     #region 数据操作
     void ResetPlayerStaticData(Player player)

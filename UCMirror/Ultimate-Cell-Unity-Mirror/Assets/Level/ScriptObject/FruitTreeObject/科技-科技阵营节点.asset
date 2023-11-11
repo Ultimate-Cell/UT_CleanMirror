@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: "\u79D1\u6280-\u79D1\u6280\u9635\u8425\u8282\u70B9"
   FruitId: 10000
-  isTigger: 1
+  isTigger: 0
   isRootFruit: 0
   isCampFruit: 1
   CostPointsInfo: 5
