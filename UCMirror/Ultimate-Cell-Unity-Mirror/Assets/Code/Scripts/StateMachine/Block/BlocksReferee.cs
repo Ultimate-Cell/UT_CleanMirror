@@ -23,7 +23,7 @@ public class BlocksReferee : NetworkBehaviour
     {
         get
         {
-            if(!gameoverPage)gameoverPage = Resources.Load<RectTransform>("UI/FinishPage");
+            if(!gameoverPage)gameoverPage = Resources.Load<RectTransform>("UI/VictoryPage");
             return gameoverPage;
         }
     }
@@ -44,7 +44,7 @@ public class BlocksReferee : NetworkBehaviour
     {
         get
         {
-            if(!defeatedPage)defeatedPage = Resources.Load<RectTransform>("UI/DefeatedPage");
+            if(!defeatedPage)defeatedPage = Resources.Load<RectTransform>("UI/FailPage");
             return defeatedPage;
         }
     }
@@ -53,7 +53,7 @@ public class BlocksReferee : NetworkBehaviour
     {
         get
         {
-            if(!equivalentPage)equivalentPage = Resources.Load<RectTransform>("UI/EquivalentPage");
+            if(!equivalentPage)equivalentPage = Resources.Load<RectTransform>("UI/VictoryPage");
             return equivalentPage;
         }
     }
