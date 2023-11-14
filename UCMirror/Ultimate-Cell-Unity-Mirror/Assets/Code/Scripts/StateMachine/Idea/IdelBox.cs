@@ -778,8 +778,13 @@ public class IdelBox : NetworkBehaviour,
     }
     Vector3 ClientMouseOffest(Vector3 mousePos)
     {
-        Vector3 player1MousePosition = mousePos + new Vector3(0f,0f,0);
-        Vector3 player2MousePosition = mousePos + new Vector3(0f,0f,0);
+        // 1920 * 1080 Computer
+        Vector3 player1MousePosition = mousePos + new Vector3(-300f,0f,0);
+        Vector3 player2MousePosition = mousePos + new Vector3(-200f,0f,0);
+
+        // 1920 * 1080 Phone
+        // Vector3 player1MousePosition = mousePos + new Vector3(0f,0f,0);
+        // Vector3 player2MousePosition = mousePos + new Vector3(150f,0f,0);
         Vector3 mousePosition = player == Player.Player1 ? player1MousePosition : player == Player.Player2 ? player2MousePosition : Vector3.zero;
         return mousePosition;
     }   
