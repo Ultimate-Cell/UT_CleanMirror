@@ -343,7 +343,7 @@ public class ChangeLiquid : NetworkBehaviour
     void Sound_PetriDish_Loading()
     {
         string Sound_PetriDish_Loading = "Sound_PetriDish_Loading";
-        AudioSystemManager.Instance.PlaySoundSimpleScaleTemp(Sound_PetriDish_Loading,Referee.InIdelbox_CreatCountdown,0.5f);
+        AudioSystemManager.Instance.PlaySoundSimpleScaleTemp(Sound_PetriDish_Loading,Referee.InIdelbox_CreatCountdown,0.085f);
     }
     void Sound_PetriDish_LoadingCompleted()
     {
