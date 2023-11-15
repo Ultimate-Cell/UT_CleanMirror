@@ -356,6 +356,7 @@ public class IdelBox : NetworkBehaviour,
     void Local_OnDrag(PointerEventData data)
     {
         OnBoardChecker();
+        Local_Drag();
     }
     bool DragChecker(PointerEventData data)
     {
@@ -626,24 +627,30 @@ public class IdelBox : NetworkBehaviour,
     {
         if(!tetrominoe)return;
         OnBoardDefultPosChecker();
+    }
+
+    void Local_Drag()
+    {
         //传输鼠标当前位置
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         bool hitBlock = Physics.Raycast(ray, out hit, Mathf.Infinity, blockTargetMask);
-        if (!hitBlock)return;
+        if (!hitBlock) return;
         hitBlock = hit.collider.transform.TryGetComponent(out BlockTetriHandler block);
-        if (!hitBlock)return;
+        if (!hitBlock) return;
         tetrominoe.transform.parent = hit.collider.transform.parent;
         tetrominoe.transform.localPosition = Vector3.zero;
         tetrominoe.transform.localScale = Vector3.one;
-        tetrominoe.transform.localPosition = new Vector3( block.posId.x, 0.3f, block.posId.y);
+        tetrominoe.transform.localPosition = new Vector3(block.posId.x, 0.3f, block.posId.y);
         tetrominoe.ColliderCheck();
         // 如果不在棋盘上 子物体 需要错位挪动
-        tetrominoe.posId = new Vector2(tetrominoe.transform.localPosition.x,tetrominoe.transform.localPosition.z);
+        tetrominoe.posId = new Vector2(tetrominoe.transform.localPosition.x, tetrominoe.transform.localPosition.z);
         bool isInCheckerboard = Dispaly.IsInCheckerboard(tetrominoe.posId);
-        if(isInCheckerboard)return;
-        tetrominoe.transform.localPosition = new Vector3( block.posId.x, 0.3f, block.posId.y);
+        if (isInCheckerboard) return;
+        tetrominoe.transform.localPosition = new Vector3(block.posId.x, 0.3f, block.posId.y);
+
     }
+
     void Event_OnLevelUp(int level)
     {
         if(level == 0)return;
